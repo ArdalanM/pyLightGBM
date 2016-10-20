@@ -16,7 +16,7 @@ class genericGMB(BaseEstimator):
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='l2',
                  feature_fraction=1., bagging_fraction=1., bagging_freq=0,
-                 metric_freq=1):
+                 metric_freq=1, early_stopping_round=0):
 
         self.exec_path = exec_path
         self.config = config
@@ -32,7 +32,8 @@ class genericGMB(BaseEstimator):
             'feature_fraction': feature_fraction,
             'bagging_fraction': bagging_fraction,
             'bagging_freq': bagging_freq,
-            'metric_freq': metric_freq
+            'metric_freq': metric_freq,
+            'early_stopping_round': early_stopping_round
         }
 
         # create tmp dir to hold data and model (especially the latter)
@@ -101,7 +102,7 @@ class GBMRegressor(genericGMB, RegressorMixin):
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='l2',
                  feature_fraction=1., bagging_fraction=1., bagging_freq=0,
-                 metric_freq=1):
+                 metric_freq=1, early_stopping_round=0):
         super(GBMRegressor, self).__init__(exec_path=exec_path,
                                            config=config,
                                            application=application,
@@ -115,7 +116,8 @@ class GBMRegressor(genericGMB, RegressorMixin):
                                            feature_fraction=feature_fraction,
                                            bagging_fraction=bagging_fraction,
                                            bagging_freq=bagging_freq,
-                                           metric_freq=metric_freq),
+                                           metric_freq=metric_freq,
+                                           early_stopping_round=early_stopping_round),
 
 
 class GBMClassifier(genericGMB, ClassifierMixin):
@@ -124,7 +126,7 @@ class GBMClassifier(genericGMB, ClassifierMixin):
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='binary_logloss',
                  feature_fraction=1., bagging_fraction=1., bagging_freq=0,
-                 metric_freq=1):
+                 metric_freq=1, early_stopping_round=0):
         super(GBMClassifier, self).__init__(exec_path=exec_path,
                                             config=config,
                                             application=application,
@@ -138,4 +140,5 @@ class GBMClassifier(genericGMB, ClassifierMixin):
                                             feature_fraction=feature_fraction,
                                             bagging_fraction=bagging_fraction,
                                             bagging_freq=bagging_freq,
-                                            metric_freq=metric_freq),
+                                            metric_freq=metric_freq,
+                                            early_stopping_round=early_stopping_round),
