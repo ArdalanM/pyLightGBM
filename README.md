@@ -35,4 +35,5 @@ y_pred = clf.predict(x_test)
 print("Accuracy: ", metrics.accuracy_score(y_test, np.round(y_pred)))
 ```
 
-
+## Notebooks
+* [**Using pyLightGBM for Kaggle competition (Allstate Claims Severity)**](https://github.com/ArdalanM/pyLightGBM/blob/master/notebooks/regression_example_kaggle_allstate.ipynb)
