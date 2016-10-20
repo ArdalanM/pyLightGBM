@@ -15,8 +15,8 @@ class genericGMB(BaseEstimator):
                  num_iterations=10, learning_rate=0.1,
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='l2',
-                 feature_fraction=1., bagging_fraction=1., bagging_freq=0,
-                 metric_freq=1, early_stopping_round=0):
+                 feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
+                 metric_freq=1, early_stopping_round=0, ):
 
         self.exec_path = exec_path
         self.config = config
@@ -30,8 +30,10 @@ class genericGMB(BaseEstimator):
             'min_data_in_leaf': min_data_in_leaf,
             'metric': metric,
             'feature_fraction': feature_fraction,
+            'feature_fraction_seed': feature_fraction_seed,
             'bagging_fraction': bagging_fraction,
             'bagging_freq': bagging_freq,
+            'bagging_seed': bagging_seed,
             'metric_freq': metric_freq,
             'early_stopping_round': early_stopping_round
         }
@@ -101,7 +103,7 @@ class GBMRegressor(genericGMB, RegressorMixin):
                  num_iterations=10, learning_rate=0.1,
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='l2',
-                 feature_fraction=1., bagging_fraction=1., bagging_freq=0,
+                 feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
                  metric_freq=1, early_stopping_round=0):
         super(GBMRegressor, self).__init__(exec_path=exec_path,
                                            config=config,
@@ -114,8 +116,10 @@ class GBMRegressor(genericGMB, RegressorMixin):
                                            min_data_in_leaf=min_data_in_leaf,
                                            metric=metric,
                                            feature_fraction=feature_fraction,
+                                           feature_fraction_seed=feature_fraction_seed,
                                            bagging_fraction=bagging_fraction,
                                            bagging_freq=bagging_freq,
+                                           bagging_seed=bagging_seed,
                                            metric_freq=metric_freq,
                                            early_stopping_round=early_stopping_round),
 
@@ -125,7 +129,7 @@ class GBMClassifier(genericGMB, ClassifierMixin):
                  num_iterations=10, learning_rate=0.1,
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='binary_logloss',
-                 feature_fraction=1., bagging_fraction=1., bagging_freq=0,
+                 feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
                  metric_freq=1, early_stopping_round=0):
         super(GBMClassifier, self).__init__(exec_path=exec_path,
                                             config=config,
@@ -138,7 +142,9 @@ class GBMClassifier(genericGMB, ClassifierMixin):
                                             min_data_in_leaf=min_data_in_leaf,
                                             metric=metric,
                                             feature_fraction=feature_fraction,
+                                            feature_fraction_seed=feature_fraction_seed,
                                             bagging_fraction=bagging_fraction,
                                             bagging_freq=bagging_freq,
+                                            bagging_seed=bagging_seed,
                                             metric_freq=metric_freq,
                                             early_stopping_round=early_stopping_round),
