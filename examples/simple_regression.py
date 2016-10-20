@@ -15,7 +15,6 @@ clf = GBMRegressor(exec_path="~/Documents/apps/LightGBM/lightgbm",
                    num_iterations=10000, learning_rate=0.01, num_leaves=10, min_data_in_leaf=10,
                    early_stopping_round=10)
 
-
 x_train, x_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=42)
 clf.fit(x_train, y_train, test_data=[(x_test, y_test)])
 y_pred = clf.predict(x_test)
