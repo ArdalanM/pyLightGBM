@@ -15,7 +15,7 @@ y[y == 2] = 0
 
 
 # Classifier: 'exec_path' is the absolute path lightgbm
-clf = GBMClassifier(exec_path="/home/ardalan/Documents/apps/LightGBM/lightgbm",
+clf = GBMClassifier(exec_path="~/Documents/apps/LightGBM/lightgbm",
                     num_iterations=100, learning_rate=0.01, num_leaves=4,
                     min_data_in_leaf=1)
 skf = model_selection.StratifiedKFold(n_splits=5)
