@@ -10,6 +10,7 @@ np.random.seed(1337) # for reproducibility
 
 
 X, y = datasets.load_diabetes(return_X_y=True)
+# 'exec_path' is the path to lightgbm executable
 clf = GBMRegressor(exec_path="~/Documents/apps/LightGBM/lightgbm",
                    num_iterations=100, learning_rate=0.01, num_leaves=10, min_data_in_leaf=10)
 

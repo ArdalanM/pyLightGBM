@@ -14,7 +14,7 @@ X, y = datasets.load_iris(return_X_y=True)
 y[y == 2] = 0
 
 
-# Classifier: 'exec_path' is the absolute path lightgbm
+# Classifier: 'exec_path' is the path to lightgbm executable
 clf = GBMClassifier(exec_path="~/Documents/apps/LightGBM/lightgbm",
                     num_iterations=100, learning_rate=0.01, num_leaves=4,
                     min_data_in_leaf=1)
