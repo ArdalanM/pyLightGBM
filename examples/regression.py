@@ -6,27 +6,26 @@
 import numpy as np
 from sklearn import datasets, metrics, model_selection
 from pylightgbm.models import GBMRegressor
-np.random.seed(1337) # for reproducibility
+
+# Parameters
+seed = 1337
 
 
+np.random.seed(seed) # for reproducibility
 X, y = datasets.load_diabetes(return_X_y=True)
+x_train, x_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=seed)
 
-# Regressor: 'exec_path' is the path to lightgbm executable
+
+# 'exec_path' is the path to lightgbm executable
 clf = GBMRegressor(exec_path="~/Documents/apps/LightGBM/lightgbm",
-                   num_iterations=50, learning_rate=0.01, num_leaves=10, min_data_in_leaf=10)
-skf = model_selection.KFold(n_splits=5)
+                   num_iterations=10000, learning_rate=0.01,
+                   num_leaves=10,
+                   min_data_in_leaf=10,
+                   early_stopping_round=10)
+
+clf.fit(x_train, y_train, test_data=[(x_test, y_test)])
+y_pred = clf.predict(x_test)
+
+print("Mean Square Error: ", metrics.mean_squared_error(y_test, y_pred))
 
 
-scores = []
-for train_idx, val_idx in skf.split(X, y):
-    x_train = X[train_idx, :]
-    y_train = y[train_idx]
-
-    x_val = X[val_idx, :]
-    y_val = y[val_idx]
-
-    clf.fit(x_train, y_train)
-    y_pred = clf.predict(x_val)
-    score = metrics.mean_absolute_error(y_val, y_pred)
-    scores.append(score)
-print("CV score: {}".format(scores))
