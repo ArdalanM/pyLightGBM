@@ -4,6 +4,12 @@ Python binding for Microsoft LightGBM: https://github.com/Microsoft/LightGBM
  - early stopping
  - works with scikit-learn: GridSearchCV, cross_val_score, etc...
 
+## Installation:
+
+```
+pip install git+https://github.com/ArdalanM/pyLightGBM.git
+```
+
 ## Regression example:
 ```python
 import numpy as np
