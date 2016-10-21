@@ -3,7 +3,6 @@
 @author: Ardalan MEHRANI <ardalan77400@gmail.com>
 @brief:
 """
-import sys
 import os
 import numpy as np
 import tempfile
@@ -12,12 +11,13 @@ from sklearn import datasets
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
 
-class genericGMB(BaseEstimator):
+class GenericGMB(BaseEstimator):
     def __init__(self, exec_path="LighGBM/lightgbm", config="", application="regression",
                  num_iterations=10, learning_rate=0.1,
-                 num_leaves=127, tree_learner="serial", num_threads=1,
-                 min_data_in_leaf=100, metric='l2',
-                 feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
+                 num_leaves=127, tree_learner="serial",
+                 num_threads=1, min_data_in_leaf=100, metric='l2',
+                 feature_fraction=1., feature_fraction_seed=2,
+                 bagging_fraction=1., bagging_freq=0, bagging_seed=3,
                  metric_freq=1, early_stopping_round=0, model=None):
 
         self.exec_path = exec_path
@@ -120,10 +120,17 @@ class genericGMB(BaseEstimator):
         pass
 
 
-class GBMClassifier(genericGMB, ClassifierMixin):
-    def __init__(self, *args, **kwargs):
-        kwargs['application'] = 'binary'
-        super(GBMClassifier, self).__init__(*args, **kwargs)
+class GBMClassifier(GenericGMB, ClassifierMixin):
+    def __init__(self, exec_path="LighGBM/lightgbm", config="", application="binary",
+                 num_iterations=10, learning_rate=0.1,
+                 num_leaves=127, tree_learner="serial", num_threads=1,
+                 min_data_in_leaf=100, metric='l2',
+                 feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
+                 metric_freq=1, early_stopping_round=0, model=None):
+        super(GBMClassifier, self).__init__(exec_path, config, application, num_iterations, learning_rate, num_leaves,
+                                            tree_learner, num_threads, min_data_in_leaf, metric, feature_fraction,
+                                            feature_fraction_seed, bagging_fraction, bagging_freq, bagging_seed,
+                                            metric_freq, early_stopping_round, model)
 
     def predict_proba(self, X):
         tmp_dir = tempfile.mkdtemp()
@@ -158,8 +165,14 @@ class GBMClassifier(genericGMB, ClassifierMixin):
         return y_prob.argmax(-1)
 
 
-class GBMRegressor(genericGMB, RegressorMixin):
-    def __init__(self, *args, **kwargs):
-        kwargs['application'] = 'regression'
-        super(GBMRegressor, self).__init__(*args, **kwargs)
-
+class GBMRegressor(GenericGMB, RegressorMixin):
+    def __init__(self, exec_path="LighGBM/lightgbm", config="", application="regression",
+                 num_iterations=10, learning_rate=0.1,
+                 num_leaves=127, tree_learner="serial", num_threads=1,
+                 min_data_in_leaf=100, metric='l2',
+                 feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
+                 metric_freq=1, early_stopping_round=0, model=None):
+        super(GBMRegressor, self).__init__(exec_path, config, application, num_iterations, learning_rate, num_leaves,
+                                           tree_learner, num_threads, min_data_in_leaf, metric, feature_fraction,
+                                           feature_fraction_seed, bagging_fraction, bagging_freq, bagging_seed,
+                                           metric_freq, early_stopping_round, model)
