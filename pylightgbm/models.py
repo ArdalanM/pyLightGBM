@@ -67,6 +67,7 @@ class genericGMB(BaseEstimator):
 
         shutil.rmtree(tmp_dir)
 
+
     def predict(self, X):
         tmp_dir = tempfile.mkdtemp()
         predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.svm"))
@@ -110,12 +111,16 @@ class genericGMB(BaseEstimator):
         pass
 
 class GBMRegressor(genericGMB, RegressorMixin):
-     def __init__(self, *args, **kwargs):
-         kwargs['application'] = 'regression'
-         super(GBMRegressor, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        kwargs['application'] = 'regression'
+        super(GBMRegressor, self).__init__(*args, **kwargs)
 
 
 class GBMClassifier(genericGMB, ClassifierMixin):
-     def __init__(self, *args, **kwargs):
-         kwargs['application'] = 'binary'
-         super(GBMClassifier, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        kwargs['application'] = 'binary'
+        super(GBMClassifier, self).__init__(*args, **kwargs)
+
+    def predict_proba(self, X):
+        probability_of_one = self.predict(X)
+        return np.transpose(np.vstack((1 - probability_of_one, probability_of_one)))
