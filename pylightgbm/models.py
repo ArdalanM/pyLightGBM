@@ -43,18 +43,26 @@ class genericGMB(BaseEstimator):
 
         # create tmp dir to hold data and model (especially the latter)
 
-    def fit(self, X, y):
+    def fit(self, X, y, test_data=None):
+
         tmp_dir = tempfile.mkdtemp()
         train_filepath = os.path.abspath("{}/X.svm".format(tmp_dir))
         datasets.dump_svmlight_file(X, y, train_filepath)
 
+        valid = []
+        if test_data:
+            for i, (x_test, y_test) in enumerate(test_data):
+                test_filepath = os.path.abspath("{}/X{}_test.svm".format(tmp_dir, i))
+                print(test_filepath)
+                valid.append(test_filepath)
+                datasets.dump_svmlight_file(x_test, y_test, test_filepath)
 
         self.param['task'] = 'train'
         self.param['data'] = train_filepath
+        self.param['valid'] = ",".join(valid)
         self.param['output_model'] = os.path.join(tmp_dir, "LightGBM_model.txt")
 
         calls = ["{}={}\n".format(k, self.param[k]) for k in self.param]
-
         if self.config == "":
             conf_filepath = os.path.join(tmp_dir, "train.conf")
             open(conf_filepath, 'w').writelines(calls)
@@ -66,7 +74,6 @@ class genericGMB(BaseEstimator):
             self.model = file.read()
 
         shutil.rmtree(tmp_dir)
-
 
     def predict(self, X):
         tmp_dir = tempfile.mkdtemp()
@@ -89,7 +96,9 @@ class genericGMB(BaseEstimator):
         open(conf_filepath, 'w').writelines(calls)
         os.system("{} config={}".format(self.exec_path, conf_filepath))
         y_pred = np.loadtxt(output_results, dtype=float)
+
         shutil.rmtree(tmp_dir)
+
         return y_pred
 
     def get_params(self, deep=True):
@@ -110,11 +119,6 @@ class genericGMB(BaseEstimator):
     def __del__(self):
         pass
 
-class GBMRegressor(genericGMB, RegressorMixin):
-    def __init__(self, *args, **kwargs):
-        kwargs['application'] = 'regression'
-        super(GBMRegressor, self).__init__(*args, **kwargs)
-
 
 class GBMClassifier(genericGMB, ClassifierMixin):
     def __init__(self, *args, **kwargs):
@@ -122,5 +126,40 @@ class GBMClassifier(genericGMB, ClassifierMixin):
         super(GBMClassifier, self).__init__(*args, **kwargs)
 
     def predict_proba(self, X):
-        probability_of_one = self.predict(X)
-        return np.transpose(np.vstack((1 - probability_of_one, probability_of_one)))
+        tmp_dir = tempfile.mkdtemp()
+        predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.svm"))
+        output_model = os.path.abspath(os.path.join(tmp_dir, "model"))
+        conf_filepath = os.path.join(tmp_dir, "predict.conf")
+        output_results = os.path.abspath(os.path.join(tmp_dir, "LightGBM_predict_result.txt"))
+        with open(output_model, mode="wb") as file:
+            file.write(self.model)
+
+        datasets.dump_svmlight_file(X, np.zeros(len(X)), f=predict_filepath)
+
+        calls = [
+            "task = predict\n",
+            "data = {}\n".format(predict_filepath),
+            "input_model = {}\n".format(output_model),
+            "output_result={}\n".format(output_results)
+        ]
+
+        open(conf_filepath, 'w').writelines(calls)
+        os.system("{} config={}".format(self.exec_path, conf_filepath))
+
+        probability_of_one = np.loadtxt(output_results, dtype=float)
+        probability_of_zero = 1 - probability_of_one
+
+        shutil.rmtree(tmp_dir)
+
+        return np.transpose(np.vstack((probability_of_zero, probability_of_one)))
+
+    def predict(self, X):
+        y_prob = self.predict_proba(X)
+        return y_prob.argmax(-1)
+
+
+class GBMRegressor(genericGMB, RegressorMixin):
+    def __init__(self, *args, **kwargs):
+        kwargs['application'] = 'regression'
+        super(GBMRegressor, self).__init__(*args, **kwargs)
+
