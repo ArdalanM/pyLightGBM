@@ -18,7 +18,7 @@ class GenericGMB(BaseEstimator):
                  num_threads=1, min_data_in_leaf=100, metric='l2',
                  feature_fraction=1., feature_fraction_seed=2,
                  bagging_fraction=1., bagging_freq=0, bagging_seed=3,
-                 metric_freq=1, early_stopping_round=0, model=None):
+                 metric_freq=1, early_stopping_round=0, max_bin=255, model=None):
 
         self.exec_path = exec_path
         self.config = config
@@ -38,7 +38,8 @@ class GenericGMB(BaseEstimator):
             'bagging_freq': bagging_freq,
             'bagging_seed': bagging_seed,
             'metric_freq': metric_freq,
-            'early_stopping_round': early_stopping_round
+            'early_stopping_round': early_stopping_round,
+            'max_bin': max_bin
         }
 
         # create tmp dir to hold data and model (especially the latter)
@@ -126,11 +127,11 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='l2',
                  feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
-                 metric_freq=1, early_stopping_round=0, model=None):
+                 metric_freq=1, early_stopping_round=0, max_bin=255, model=None):
         super(GBMClassifier, self).__init__(exec_path, config, application, num_iterations, learning_rate, num_leaves,
                                             tree_learner, num_threads, min_data_in_leaf, metric, feature_fraction,
                                             feature_fraction_seed, bagging_fraction, bagging_freq, bagging_seed,
-                                            metric_freq, early_stopping_round, model)
+                                            metric_freq, early_stopping_round, max_bin, model)
 
     def predict_proba(self, X):
         tmp_dir = tempfile.mkdtemp()
@@ -171,8 +172,8 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='l2',
                  feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
-                 metric_freq=1, early_stopping_round=0, model=None):
+                 metric_freq=1, early_stopping_round=0, max_bin=255, model=None):
         super(GBMRegressor, self).__init__(exec_path, config, application, num_iterations, learning_rate, num_leaves,
                                            tree_learner, num_threads, min_data_in_leaf, metric, feature_fraction,
                                            feature_fraction_seed, bagging_fraction, bagging_freq, bagging_seed,
-                                           metric_freq, early_stopping_round, model)
+                                           metric_freq, early_stopping_round, max_bin, model)
