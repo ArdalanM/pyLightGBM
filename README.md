@@ -16,8 +16,11 @@ import numpy as np
 from sklearn import datasets, metrics, model_selection
 from pylightgbm.models import GBMRegressor
 
+# full path to lightgbm executable (on Windows include .exe)
+exec = "~/Documents/apps/LightGBM/lightgbm"
+
 X, y = datasets.load_diabetes(return_X_y=True)
-clf = GBMRegressor(exec_path="~/Documents/apps/LightGBM/lightgbm",
+clf = GBMRegressor(exec_path=exec,
                    num_iterations=100, early_stopping_round=10,
                    num_leaves=10, min_data_in_leaf=10)
 
@@ -33,10 +36,13 @@ import numpy as np
 from sklearn import datasets, metrics, model_selection
 from pylightgbm.models import GBMClassifier
 
+# full path to lightgbm executable (on Windows include .exe)
+exec = "~/Documents/apps/LightGBM/lightgbm"
+
 X, Y = datasets.make_classification(n_samples=200, n_features=10)
 x_train, x_test, y_train, y_test = model_selection.train_test_split(X, Y, test_size=0.2)
 
-clf = GBMClassifier(exec_path="~/Documents/apps/LightGBM/lightgbm", min_data_in_leaf=1)
+clf = GBMClassifier(exec_path=exec, min_data_in_leaf=1)
 clf.fit(x_train, y_train, test_data=[(x_test, y_test)])
 y_pred = clf.predict(x_test)
 print("Accuracy: ", metrics.accuracy_score(y_test, y_pred))
@@ -48,9 +54,12 @@ import numpy as np
 from sklearn import datasets, metrics, model_selection
 from pylightgbm.models import GBMClassifier
 
+# full path to lightgbm executable (on Windows include .exe)
+exec = "~/Documents/apps/LightGBM/lightgbm"
+
 X, Y = datasets.make_classification(n_samples=1000, n_features=10)
 
-gbm = GBMClassifier(exec_path="~/Documents/apps/LightGBM/lightgbm",
+gbm = GBMClassifier(exec_path=exec,
                     metric='binary_error', early_stopping_round=10, bagging_freq=10)
 
 param_grid = {'learning_rate': [0.1, 0.04], 'bagging_fraction': [0.5, 0.9]}
