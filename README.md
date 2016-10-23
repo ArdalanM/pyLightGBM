@@ -1,16 +1,16 @@
 # pyLightGBM
 Python binding for Microsoft LightGBM: https://github.com/Microsoft/LightGBM
     
- - early stopping
- - works with scikit-learn: GridSearchCV, cross_val_score, etc...
-
+ - Early stopping (```clf.best_round```)
+ - Works with scikit-learn: ```GridSearchCV```, ```cross_val_score```, etc...
+ - Silent mode (```verbose=False```)
 ## Installation:
 
 ```
 pip install git+https://github.com/ArdalanM/pyLightGBM.git
 ```
 
-## Regression example:
+## Regression:
 ```python
 import numpy as np
 from sklearn import datasets, metrics, model_selection
@@ -24,13 +24,13 @@ clf = GBMRegressor(exec_path=exec,
                    num_iterations=100, early_stopping_round=10,
                    num_leaves=10, min_data_in_leaf=10)
 
-x_train, x_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=42)
+x_train, x_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2)
 
 clf.fit(x_train, y_train, test_data=[(x_test, y_test)])
 print("Mean Square Error: ", metrics.mean_squared_error(y_test, clf.predict(x_test)))
 ```
 
-## Binary Classification example:
+## Binary Classification:
 ```python
 import numpy as np
 from sklearn import datasets, metrics, model_selection
@@ -48,7 +48,7 @@ y_pred = clf.predict(x_test)
 print("Accuracy: ", metrics.accuracy_score(y_test, y_pred))
 ```
 
-## Grid Search example:
+## Grid Search:
 ```python
 import numpy as np
 from sklearn import datasets, metrics, model_selection
