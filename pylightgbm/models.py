@@ -85,7 +85,7 @@ class GenericGMB(BaseEstimator):
         if self.verbose:
             print(process)
 
-        if test_data:
+        if test_data and self.param['early_stopping_round'] > 0:
             # Extracting best round from raw logs: 'best iteration round is'
             pattern = re.compile("best iteration round is ((\d+))")
             match = re.search(pattern, process)
