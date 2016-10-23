@@ -4,9 +4,11 @@
 @brief:
 """
 import os
-import numpy as np
-import tempfile
+import re
 import shutil
+import tempfile
+import subprocess
+import numpy as np
 from sklearn import datasets
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
@@ -18,11 +20,16 @@ class GenericGMB(BaseEstimator):
                  num_threads=1, min_data_in_leaf=100, metric='l2',
                  feature_fraction=1., feature_fraction_seed=2,
                  bagging_fraction=1., bagging_freq=0, bagging_seed=3,
-                 metric_freq=1, early_stopping_round=0, max_bin=255, model=None):
+                 metric_freq=1, early_stopping_round=0, max_bin=255,
+                 verbose=True, model=None):
 
-        self.exec_path = exec_path
+        # '~/path/to/lightgbm' becomes 'absolute/path/to/lightgbm'
+        self.exec_path = os.path.expanduser(exec_path)
+
         self.config = config
         self.model = model
+        self.verbose = verbose
+
         self.param = {
             'application': application,
             'num_iterations': num_iterations,
@@ -42,8 +49,7 @@ class GenericGMB(BaseEstimator):
             'max_bin': max_bin
         }
 
-        # create tmp dir to hold data and model (especially the latter)
-
+    # create tmp dir to hold data and model (especially the latter)
     def fit(self, X, y, test_data=None):
 
         tmp_dir = tempfile.mkdtemp()
@@ -54,7 +60,6 @@ class GenericGMB(BaseEstimator):
         if test_data:
             for i, (x_test, y_test) in enumerate(test_data):
                 test_filepath = os.path.abspath("{}/X{}_test.svm".format(tmp_dir, i))
-                print(test_filepath)
                 valid.append(test_filepath)
                 datasets.dump_svmlight_file(x_test, y_test, test_filepath)
 
@@ -64,12 +69,27 @@ class GenericGMB(BaseEstimator):
         self.param['output_model'] = os.path.join(tmp_dir, "LightGBM_model.txt")
 
         calls = ["{}={}\n".format(k, self.param[k]) for k in self.param]
+
         if self.config == "":
             conf_filepath = os.path.join(tmp_dir, "train.conf")
-            open(conf_filepath, 'w').writelines(calls)
-            os.system("{} config={}".format(self.exec_path, conf_filepath))
+            with open(conf_filepath, 'w') as f:
+                f.writelines(calls)
+
+            process = subprocess.check_output([self.exec_path, "config={}".format(conf_filepath)],
+                                              universal_newlines=True)
+
         else:
-            os.system("{} config={}".format(self.exec_path, self.config))
+            process = subprocess.check_output([self.exec_path, "config={}".format(self.config)],
+                                              universal_newlines=True)
+
+        if self.verbose:
+            print(process)
+
+        if test_data:
+            # Extracting best round from raw logs: 'best iteration round is'
+            pattern = re.compile("best iteration round is ((\d+))")
+            match = re.search(pattern, process)
+            self.best_round = int(match.group(1))
 
         with open(self.param['output_model'], mode='rb') as file:
             self.model = file.read()
@@ -80,22 +100,28 @@ class GenericGMB(BaseEstimator):
         tmp_dir = tempfile.mkdtemp()
         predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.svm"))
         output_model = os.path.abspath(os.path.join(tmp_dir, "model"))
-        conf_filepath = os.path.join(tmp_dir, "predict.conf")
         output_results = os.path.abspath(os.path.join(tmp_dir, "LightGBM_predict_result.txt"))
+        conf_filepath = os.path.join(tmp_dir, "predict.conf")
+
         with open(output_model, mode="wb") as file:
             file.write(self.model)
 
         datasets.dump_svmlight_file(X, np.zeros(len(X)), f=predict_filepath)
 
-        calls = [
-            "task = predict\n",
-            "data = {}\n".format(predict_filepath),
-            "input_model = {}\n".format(output_model),
-            "output_result={}\n".format(output_results)
-        ]
+        calls = ["task = predict\n",
+                 "data = {}\n".format(predict_filepath),
+                 "input_model = {}\n".format(output_model),
+                 "output_result={}\n".format(output_results)]
 
-        open(conf_filepath, 'w').writelines(calls)
-        os.system("{} config={}".format(self.exec_path, conf_filepath))
+        with open(conf_filepath, 'w') as f:
+            f.writelines(calls)
+
+        process = subprocess.check_output([self.exec_path, "config={}".format(conf_filepath)],
+                                          universal_newlines=True)
+
+        if self.verbose:
+            print(process)
+
         y_pred = np.loadtxt(output_results, dtype=float)
 
         shutil.rmtree(tmp_dir)
@@ -107,6 +133,7 @@ class GenericGMB(BaseEstimator):
         params['exec_path'] = self.exec_path
         params['config'] = self.config
         params['model'] = self.model
+        params['verbose'] = self.verbose
         if 'output_model' in params:
             del params['output_model']
         return params
@@ -117,9 +144,6 @@ class GenericGMB(BaseEstimator):
         self.__init__(**params)
         return self
 
-    def __del__(self):
-        pass
-
 
 class GBMClassifier(GenericGMB, ClassifierMixin):
     def __init__(self, exec_path="LighGBM/lightgbm", config="", application="binary",
@@ -127,18 +151,21 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='l2',
                  feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
-                 metric_freq=1, early_stopping_round=0, max_bin=255, model=None):
+                 metric_freq=1, early_stopping_round=0, max_bin=255, verbose=True, model=None):
+
         super(GBMClassifier, self).__init__(exec_path, config, application, num_iterations, learning_rate, num_leaves,
                                             tree_learner, num_threads, min_data_in_leaf, metric, feature_fraction,
                                             feature_fraction_seed, bagging_fraction, bagging_freq, bagging_seed,
-                                            metric_freq, early_stopping_round, max_bin, model)
+                                            metric_freq, early_stopping_round, max_bin, verbose, model)
 
     def predict_proba(self, X):
+
         tmp_dir = tempfile.mkdtemp()
         predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.svm"))
         output_model = os.path.abspath(os.path.join(tmp_dir, "model"))
         conf_filepath = os.path.join(tmp_dir, "predict.conf")
         output_results = os.path.abspath(os.path.join(tmp_dir, "LightGBM_predict_result.txt"))
+
         with open(output_model, mode="wb") as file:
             file.write(self.model)
 
@@ -151,8 +178,14 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
             "output_result={}\n".format(output_results)
         ]
 
-        open(conf_filepath, 'w').writelines(calls)
-        os.system("{} config={}".format(self.exec_path, conf_filepath))
+        with open(conf_filepath, 'w') as f:
+            f.writelines(calls)
+
+        process = subprocess.check_output([self.exec_path, "config={}".format(conf_filepath)],
+                                          universal_newlines=True)
+
+        if self.verbose:
+            print(process)
 
         probability_of_one = np.loadtxt(output_results, dtype=float)
         probability_of_zero = 1 - probability_of_one
@@ -172,8 +205,9 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                  num_leaves=127, tree_learner="serial", num_threads=1,
                  min_data_in_leaf=100, metric='l2',
                  feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
-                 metric_freq=1, early_stopping_round=0, max_bin=255, model=None):
+                 metric_freq=1, early_stopping_round=0, max_bin=255, verbose=True, model=None):
+
         super(GBMRegressor, self).__init__(exec_path, config, application, num_iterations, learning_rate, num_leaves,
                                            tree_learner, num_threads, min_data_in_leaf, metric, feature_fraction,
                                            feature_fraction_seed, bagging_fraction, bagging_freq, bagging_seed,
-                                           metric_freq, early_stopping_round, max_bin, model)
+                                           metric_freq, early_stopping_round, max_bin, verbose, model)
