@@ -1,16 +1,24 @@
-# pyLightGBM
+pyLightGBM
+==========
 Python binding for Microsoft LightGBM: https://github.com/Microsoft/LightGBM
-    
+
+**pyLightGBM** have several advantages:
+
  - Early stopping (```clf.best_round```)
  - Works with scikit-learn: ```GridSearchCV```, ```cross_val_score```, etc...
  - Silent mode (```verbose=False```)
-## Installation:
 
+Installation
+------------
 ```
 pip install git+https://github.com/ArdalanM/pyLightGBM.git
 ```
 
-## Regression:
+Examples
+------------
+
+* Regression:
+
 ```python
 import numpy as np
 from sklearn import datasets, metrics, model_selection
@@ -30,7 +38,8 @@ clf.fit(x_train, y_train, test_data=[(x_test, y_test)])
 print("Mean Square Error: ", metrics.mean_squared_error(y_test, clf.predict(x_test)))
 ```
 
-## Binary Classification:
+* Binary Classification:
+
 ```python
 import numpy as np
 from sklearn import datasets, metrics, model_selection
@@ -48,7 +57,8 @@ y_pred = clf.predict(x_test)
 print("Accuracy: ", metrics.accuracy_score(y_test, y_pred))
 ```
 
-## Grid Search:
+* Grid Search:
+
 ```python
 import numpy as np
 from sklearn import datasets, metrics, model_selection
@@ -73,5 +83,6 @@ print("Best score: ", clf.best_score_)
 print("Best params: ", clf.best_params_)
 ```
 
-## Notebooks
+Notebooks
+------------
 * [**Using pyLightGBM for Kaggle competition (Allstate Claims Severity)**](https://github.com/ArdalanM/pyLightGBM/blob/master/notebooks/regression_example_kaggle_allstate.ipynb)
