@@ -10,9 +10,11 @@ Python binding for Microsoft LightGBM: https://github.com/Microsoft/LightGBM
 
 Installation
 ------------
+
+Install lastest verion of [Microsoft LightGBM](https://github.com/Microsoft/LightGBM/wiki/Installation-Guide) then install the wrapper:
 ```
-pip install git+https://github.com/ArdalanM/pyLightGBM.git
-```
+ pip install git+https://github.com/ArdalanM/pyLightGBM.git
+ ```
 
 Examples
 ------------
