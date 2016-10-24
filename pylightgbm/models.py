@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import subprocess
 import numpy as np
+from collections import Counter
 from sklearn import datasets
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
@@ -94,7 +95,7 @@ class GenericGMB(BaseEstimator):
             else:
                 self.best_round = self.param['num_iterations']
 
-        with open(self.param['output_model'], mode='rb') as file:
+        with open(self.param['output_model'], mode='r') as file:
             self.model = file.read()
 
         shutil.rmtree(tmp_dir)
@@ -106,7 +107,7 @@ class GenericGMB(BaseEstimator):
         output_results = os.path.abspath(os.path.join(tmp_dir, "LightGBM_predict_result.txt"))
         conf_filepath = os.path.join(tmp_dir, "predict.conf")
 
-        with open(output_model, mode="wb") as file:
+        with open(output_model, mode="w") as file:
             file.write(self.model)
 
         datasets.dump_svmlight_file(X, np.zeros(len(X)), f=predict_filepath)
@@ -147,6 +148,51 @@ class GenericGMB(BaseEstimator):
         self.__init__(**params)
         return self
 
+    def feature_importance(self, feature_names=[], importance_type='weight'):
+        """Get feature importance of each feature.
+        Importance type can be defined as:
+            'weight' - the number of times a feature is used to split the data across all trees.
+            'gain' - the average gain of the feature when it is used in trees
+            'cover' - the average coverage of the feature when it is used in trees
+
+        Parameters
+        ----------
+        feature_names: list (optional)
+           List of feature names.
+        importance_type: string
+            The type of feature importance
+        """
+        assert(importance_type == 'weight', 'For now, only weighted feature importance is implemented')
+
+        pattern_nfeat = re.compile("max_feature_idx=(\d+)")
+        pattern_split_feat = re.compile("split_feature=([\d+\s\d+]+)\n")
+
+        match_nfeat = re.match(pattern_nfeat, self.model)
+        match_split = re.findall(pattern_split_feat, self.model)
+
+        if match_nfeat:
+            # total number of features
+            nfeatures = int(match_nfeat.group(1)) + 1
+        else:
+            raise ValueError
+
+        if importance_type == 'weight':
+            if match_split:
+                # list of feature index used for splitting a node
+                string_of_idx = " ".join(match_split)
+                list_of_int = [int(val) for val in string_of_idx.split(" ")]
+
+            # Sorted list of [(feature_index, feature_importance)]
+            feat_importance = Counter(list_of_int).most_common()
+            feat_importance = [(idx, importance/float(nfeatures))
+                               for idx, importance in feat_importance]
+
+        if len(feature_names) > 0:
+            feat_importance = [(feature_names[idx], importance)
+                               for idx, importance in feat_importance]
+
+        return feat_importance
+
 
 class GBMClassifier(GenericGMB, ClassifierMixin):
     def __init__(self, exec_path="LighGBM/lightgbm", config="", application="binary",
@@ -169,7 +215,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         conf_filepath = os.path.join(tmp_dir, "predict.conf")
         output_results = os.path.abspath(os.path.join(tmp_dir, "LightGBM_predict_result.txt"))
 
-        with open(output_model, mode="wb") as file:
+        with open(output_model, mode="w") as file:
             file.write(self.model)
 
         datasets.dump_svmlight_file(X, np.zeros(len(X)), f=predict_filepath)
