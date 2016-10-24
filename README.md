@@ -4,6 +4,7 @@ Python binding for Microsoft LightGBM: https://github.com/Microsoft/LightGBM
 
 **pyLightGBM** have several advantages:
 
+ - Feature importance (```clf.feature_importance()```)
  - Early stopping (```clf.best_round```)
  - Works with scikit-learn: ```GridSearchCV```, ```cross_val_score```, etc...
  - Silent mode (```verbose=False```)
