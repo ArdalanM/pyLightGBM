@@ -162,7 +162,7 @@ class GenericGMB(BaseEstimator):
         importance_type: string
             The type of feature importance
         """
-        assert(importance_type == 'weight', 'For now, only weighted feature importance is implemented')
+        assert importance_type in ['weight'], 'For now, only weighted feature importance is implemented'
 
         pattern_nfeat = re.compile("max_feature_idx=(\d+)")
         pattern_split_feat = re.compile("split_feature=([\d+\s\d+]+)\n")
