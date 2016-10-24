@@ -89,7 +89,10 @@ class GenericGMB(BaseEstimator):
             # Extracting best round from raw logs: 'best iteration round is'
             pattern = re.compile("best iteration round is ((\d+))")
             match = re.search(pattern, process)
-            self.best_round = int(match.group(1))
+            if match:
+                self.best_round = int(match.group(1))
+            else:
+                self.best_round = self.param['num_iterations']
 
         with open(self.param['output_model'], mode='rb') as file:
             self.model = file.read()
