@@ -2,7 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 setup(name='pylightgbm',
-      version='0.2,1',
+      version='0.2,2',
       description='Python wrapper of Microsoft LightGBM',
       author='Ardalan MEHRANI',
       author_email='ardalan77400@gmail.com',
