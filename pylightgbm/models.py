@@ -44,8 +44,8 @@ class GenericGMB(BaseEstimator):
         self.config = config
         self.model = model
         self.verbose = verbose
-        self.application = application
         self.param = {
+            'application': application,
             'num_iterations': num_iterations,
             'learning_rate': learning_rate,
             'num_leaves': num_leaves,
@@ -72,16 +72,16 @@ class GenericGMB(BaseEstimator):
         train_filepath = os.path.abspath("{}/X.svm".format(tmp_dir))
         datasets.dump_svmlight_file(X, y, train_filepath)
 
-        valid = []
         if test_data:
+            valid = []
             for i, (x_test, y_test) in enumerate(test_data):
                 test_filepath = os.path.abspath("{}/X{}_test.svm".format(tmp_dir, i))
                 valid.append(test_filepath)
                 datasets.dump_svmlight_file(x_test, y_test, test_filepath)
+            self.param['valid'] = ",".join(valid)
 
         self.param['task'] = 'train'
         self.param['data'] = train_filepath
-        self.param['valid'] = ",".join(valid)
         self.param['output_model'] = os.path.join(tmp_dir, "LightGBM_model.txt")
 
         calls = ["{}={}\n".format(k, self.param[k]) for k in self.param]
@@ -212,6 +212,7 @@ class GenericGMB(BaseEstimator):
 class GBMClassifier(GenericGMB, ClassifierMixin):
     def __init__(self, exec_path="LighGBM/lightgbm",
                  config="",
+                 application='binary',
                  num_iterations=10,
                  learning_rate=0.1,
                  num_leaves=127,
@@ -233,7 +234,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                  model=None):
         super(GBMClassifier, self).__init__(exec_path=exec_path,
                                             config=config,
-                                            application='binary',
+                                            application=application,
                                             num_iterations=num_iterations,
                                             learning_rate=learning_rate,
                                             num_leaves=num_leaves,
@@ -297,6 +298,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
 class GBMRegressor(GenericGMB, RegressorMixin):
     def __init__(self, exec_path="LighGBM/lightgbm",
                  config="",
+                 application='regression',
                  num_iterations=10,
                  learning_rate=0.1,
                  num_leaves=127,
@@ -318,7 +320,7 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                  model=None):
         super(GBMRegressor, self).__init__(exec_path=exec_path,
                                            config=config,
-                                           application='regression',
+                                           application=application,
                                            num_iterations=num_iterations,
                                            learning_rate=learning_rate,
                                            num_leaves=num_leaves,
