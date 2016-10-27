@@ -19,12 +19,9 @@ X, Y = datasets.make_classification(n_samples=1000, n_features=100, n_classes=2,
 
 # 'exec_path' is the path to lightgbm executable
 gbm = GBMClassifier(exec_path=path_to_exec,
-                    num_iterations=100,
-                    learning_rate=0.075,
-                    min_data_in_leaf=1,
-                    bagging_freq=10,
-                    metric='binary_error',
-                    early_stopping_round=10)
+                    num_iterations=1000, learning_rate=0.05,
+                    min_data_in_leaf=1, num_leaves=5,
+                    metric='binary_logloss', verbose=True)
 
 param_grid = {
     'learning_rate': [0.1, 0.04],
