@@ -15,14 +15,28 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
 
 class GenericGMB(BaseEstimator):
-    def __init__(self, exec_path="LighGBM/lightgbm", config="", application="regression",
-                 num_iterations=10, learning_rate=0.1,
-                 num_leaves=127, tree_learner="serial",
-                 num_threads=1, min_data_in_leaf=100, metric='l2',
-                 feature_fraction=1., feature_fraction_seed=2,
-                 bagging_fraction=1., bagging_freq=0, bagging_seed=3,
-                 metric_freq=1, early_stopping_round=0, max_bin=255,
-                 verbose=True, model=None):
+    def __init__(self, exec_path="LighGBM/lightgbm",
+                 config="",
+                 application="regression",
+                 num_iterations=10,
+                 learning_rate=0.1,
+                 num_leaves=127,
+                 tree_learner="serial",
+                 num_threads=1,
+                 min_data_in_leaf=100,
+                 metric='l2,',
+                 is_training_metric=False,
+                 feature_fraction=1.,
+                 feature_fraction_seed=2,
+                 bagging_fraction=1.,
+                 bagging_freq=0,
+                 bagging_seed=3,
+                 metric_freq=1,
+                 early_stopping_round=0,
+                 max_bin=255,
+                 is_unbalance=False,
+                 verbose=True,
+                 model=None):
 
         # '~/path/to/lightgbm' becomes 'absolute/path/to/lightgbm'
         self.exec_path = os.path.expanduser(exec_path)
@@ -30,9 +44,8 @@ class GenericGMB(BaseEstimator):
         self.config = config
         self.model = model
         self.verbose = verbose
-
+        self.application = application
         self.param = {
-            'application': application,
             'num_iterations': num_iterations,
             'learning_rate': learning_rate,
             'num_leaves': num_leaves,
@@ -40,6 +53,7 @@ class GenericGMB(BaseEstimator):
             'num_threads': num_threads,
             'min_data_in_leaf': min_data_in_leaf,
             'metric': metric,
+            'is_training_metric': is_training_metric,
             'feature_fraction': feature_fraction,
             'feature_fraction_seed': feature_fraction_seed,
             'bagging_fraction': bagging_fraction,
@@ -47,7 +61,8 @@ class GenericGMB(BaseEstimator):
             'bagging_seed': bagging_seed,
             'metric_freq': metric_freq,
             'early_stopping_round': early_stopping_round,
-            'max_bin': max_bin
+            'max_bin': max_bin,
+            'is_unbalance': is_unbalance
         }
 
     # create tmp dir to hold data and model (especially the latter)
@@ -98,7 +113,7 @@ class GenericGMB(BaseEstimator):
         with open(self.param['output_model'], mode='r') as file:
             self.model = file.read()
 
-        shutil.rmtree(tmp_dir)
+            shutil.rmtree(tmp_dir)
 
     def predict(self, X):
         tmp_dir = tempfile.mkdtemp()
@@ -184,7 +199,7 @@ class GenericGMB(BaseEstimator):
 
             # Sorted list of [(feature_index, feature_importance)]
             feat_importance = Counter(list_of_int).most_common()
-            feat_importance = [(idx, importance/float(nfeatures))
+            feat_importance = [(idx, importance / float(nfeatures))
                                for idx, importance in feat_importance]
 
         if len(feature_names) > 0:
@@ -195,20 +210,51 @@ class GenericGMB(BaseEstimator):
 
 
 class GBMClassifier(GenericGMB, ClassifierMixin):
-    def __init__(self, exec_path="LighGBM/lightgbm", config="", application="binary",
-                 num_iterations=10, learning_rate=0.1,
-                 num_leaves=127, tree_learner="serial", num_threads=1,
-                 min_data_in_leaf=100, metric='l2',
-                 feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
-                 metric_freq=1, early_stopping_round=0, max_bin=255, verbose=True, model=None):
-
-        super(GBMClassifier, self).__init__(exec_path, config, application, num_iterations, learning_rate, num_leaves,
-                                            tree_learner, num_threads, min_data_in_leaf, metric, feature_fraction,
-                                            feature_fraction_seed, bagging_fraction, bagging_freq, bagging_seed,
-                                            metric_freq, early_stopping_round, max_bin, verbose, model)
+    def __init__(self, exec_path="LighGBM/lightgbm",
+                 config="",
+                 num_iterations=10,
+                 learning_rate=0.1,
+                 num_leaves=127,
+                 tree_learner="serial",
+                 num_threads=1,
+                 min_data_in_leaf=100,
+                 metric='binary_logloss,',
+                 is_training_metric='False',
+                 feature_fraction=1.,
+                 feature_fraction_seed=2,
+                 bagging_fraction=1.,
+                 bagging_freq=0,
+                 bagging_seed=3,
+                 metric_freq=1,
+                 early_stopping_round=0,
+                 max_bin=255,
+                 is_unbalance=False,
+                 verbose=True,
+                 model=None):
+        super(GBMClassifier, self).__init__(exec_path=exec_path,
+                                            config=config,
+                                            application='binary',
+                                            num_iterations=num_iterations,
+                                            learning_rate=learning_rate,
+                                            num_leaves=num_leaves,
+                                            tree_learner=tree_learner,
+                                            num_threads=num_threads,
+                                            min_data_in_leaf=min_data_in_leaf,
+                                            metric=metric,
+                                            is_training_metric=is_training_metric,
+                                            feature_fraction=feature_fraction,
+                                            feature_fraction_seed=feature_fraction_seed,
+                                            bagging_fraction=bagging_fraction,
+                                            bagging_freq=bagging_freq,
+                                            bagging_seed=bagging_seed,
+                                            metric_freq=metric_freq,
+                                            early_stopping_round=early_stopping_round,
+                                            max_bin=max_bin,
+                                            is_unbalance=is_unbalance,
+                                            verbose=verbose,
+                                            model=model)
 
     def predict_proba(self, X):
-
         tmp_dir = tempfile.mkdtemp()
         predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.svm"))
         output_model = os.path.abspath(os.path.join(tmp_dir, "model"))
@@ -249,14 +295,46 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
 
 
 class GBMRegressor(GenericGMB, RegressorMixin):
-    def __init__(self, exec_path="LighGBM/lightgbm", config="", application="regression",
-                 num_iterations=10, learning_rate=0.1,
-                 num_leaves=127, tree_learner="serial", num_threads=1,
-                 min_data_in_leaf=100, metric='l2',
-                 feature_fraction=1., feature_fraction_seed=2, bagging_fraction=1., bagging_freq=0, bagging_seed=3,
-                 metric_freq=1, early_stopping_round=0, max_bin=255, verbose=True, model=None):
-
-        super(GBMRegressor, self).__init__(exec_path, config, application, num_iterations, learning_rate, num_leaves,
-                                           tree_learner, num_threads, min_data_in_leaf, metric, feature_fraction,
-                                           feature_fraction_seed, bagging_fraction, bagging_freq, bagging_seed,
-                                           metric_freq, early_stopping_round, max_bin, verbose, model)
+    def __init__(self, exec_path="LighGBM/lightgbm",
+                 config="",
+                 num_iterations=10,
+                 learning_rate=0.1,
+                 num_leaves=127,
+                 tree_learner="serial",
+                 num_threads=1,
+                 min_data_in_leaf=100,
+                 metric='l2,',
+                 is_training_metric=False,
+                 feature_fraction=1.,
+                 feature_fraction_seed=2,
+                 bagging_fraction=1.,
+                 bagging_freq=0,
+                 bagging_seed=3,
+                 metric_freq=1,
+                 early_stopping_round=0,
+                 max_bin=255,
+                 is_unbalance=False,
+                 verbose=True,
+                 model=None):
+        super(GBMRegressor, self).__init__(exec_path=exec_path,
+                                           config=config,
+                                           application='regression',
+                                           num_iterations=num_iterations,
+                                           learning_rate=learning_rate,
+                                           num_leaves=num_leaves,
+                                           tree_learner=tree_learner,
+                                           num_threads=num_threads,
+                                           min_data_in_leaf=min_data_in_leaf,
+                                           metric=metric,
+                                           is_training_metric=is_training_metric,
+                                           feature_fraction=feature_fraction,
+                                           feature_fraction_seed=feature_fraction_seed,
+                                           bagging_fraction=bagging_fraction,
+                                           bagging_freq=bagging_freq,
+                                           bagging_seed=bagging_seed,
+                                           metric_freq=metric_freq,
+                                           early_stopping_round=early_stopping_round,
+                                           max_bin=max_bin,
+                                           is_unbalance=is_unbalance,
+                                           verbose=verbose,
+                                           model=model)
