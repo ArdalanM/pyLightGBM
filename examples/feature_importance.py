@@ -11,6 +11,7 @@ from pylightgbm.models import GBMRegressor
 # Parameters
 seed = 1337
 nfolds = 5
+test_size = 0.2
 
 # 'path_to_exec' is the path to lightgbm executable (lightgbm.exe on Windows)
 path_to_exec = "~/Documents/apps/LightGBM/lightgbm"
@@ -22,18 +23,16 @@ X = datasets['data']
 Y = datasets['target']
 feature_names = datasets['feature_names']
 
-clf_xgb = XGBRegressor(max_depth=3, n_estimators=10000)
-clf_gbm = GBMRegressor(exec_path=path_to_exec, num_iterations=10000 ,
-                       learning_rate=0.01, num_leaves=255, min_data_in_leaf=1,
-                       early_stopping_round=20, verbose=False)
+clf_xgb = XGBRegressor(max_depth=3, n_estimators=1000)
+clf_gbm = GBMRegressor(exec_path=path_to_exec, num_iterations=1000, learning_rate=0.01,
+                       num_leaves=255, min_data_in_leaf=1, early_stopping_round=20, verbose=False)
 
 
-x_train, x_test, y_train, y_test = model_selection.train_test_split(X, Y, test_size=0.2, random_state=seed)
+x_train, x_test, y_train, y_test = model_selection.train_test_split(X, Y, test_size=test_size, random_state=seed)
 
 # Training the two models
 clf_gbm.fit(x_train, y_train, test_data=[(x_test, y_test)])
-clf_xgb.fit(x_train, y_train, eval_set=[(x_test, y_test)],
-            eval_metric='rmse', early_stopping_rounds=20, verbose=False)
+clf_xgb.fit(x_train, y_train, eval_set=[(x_test, y_test)], eval_metric='rmse', early_stopping_rounds=20, verbose=False)
 
 print("xgboost: feature importance")
 dic_fi = clf_xgb.booster().get_fscore()
