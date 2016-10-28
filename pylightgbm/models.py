@@ -91,29 +91,26 @@ class GenericGMB(BaseEstimator):
             with open(conf_filepath, 'w') as f:
                 f.writelines(calls)
 
-            process = subprocess.check_output([self.exec_path, "config={}".format(conf_filepath)],
-                                              universal_newlines=True)
+            process = subprocess.Popen([self.exec_path, "config={}".format(conf_filepath)],
+                                       stdout=subprocess.PIPE)
 
         else:
-            process = subprocess.check_output([self.exec_path, "config={}".format(self.config)],
-                                              universal_newlines=True)
+            process = subprocess.Popen([self.exec_path, "config={}".format(self.config)],
+                                       stdout=subprocess.PIPE)
 
         if self.verbose:
-            print(process)
-
-        if test_data and self.param['early_stopping_round'] > 0:
-            # Extracting best round from raw logs: 'best iteration round is'
-            pattern = re.compile("best iteration round is ((\d+))")
-            match = re.search(pattern, process)
-            if match:
-                self.best_round = int(match.group(1))
-            else:
-                self.best_round = self.param['num_iterations']
+            while process.poll() is None:
+                line = process.stdout.readline()
+                print(line.strip().decode('utf-8'))
+        else:
+            process.communicate()
 
         with open(self.param['output_model'], mode='r') as file:
             self.model = file.read()
-
             shutil.rmtree(tmp_dir)
+
+        if test_data and self.param['early_stopping_round'] > 0:
+            self.best_round = max(map(int, re.findall("Tree=(\d+)", self.model))) + 1
 
     def predict(self, X):
         tmp_dir = tempfile.mkdtemp()
@@ -135,14 +132,17 @@ class GenericGMB(BaseEstimator):
         with open(conf_filepath, 'w') as f:
             f.writelines(calls)
 
-        process = subprocess.check_output([self.exec_path, "config={}".format(conf_filepath)],
-                                          universal_newlines=True)
+        process = subprocess.Popen([self.exec_path, "config={}".format(conf_filepath)],
+                                   stdout=subprocess.PIPE)
 
         if self.verbose:
-            print(process)
+            while process.poll() is None:
+                line = process.stdout.readline()
+                print(line.strip().decode('utf-8'))
+        else:
+            process.communicate()
 
         y_pred = np.loadtxt(output_results, dtype=float)
-
         shutil.rmtree(tmp_dir)
 
         return y_pred
@@ -277,11 +277,15 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         with open(conf_filepath, 'w') as f:
             f.writelines(calls)
 
-        process = subprocess.check_output([self.exec_path, "config={}".format(conf_filepath)],
-                                          universal_newlines=True)
+        process = subprocess.Popen([self.exec_path, "config={}".format(conf_filepath)],
+                                   stdout=subprocess.PIPE)
 
         if self.verbose:
-            print(process)
+            while process.poll() is None:
+                line = process.stdout.readline()
+                print(line.strip().decode('utf-8'))
+        else:
+            process.communicate()
 
         probability_of_one = np.loadtxt(output_results, dtype=float)
         probability_of_zero = 1 - probability_of_one
