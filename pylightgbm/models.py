@@ -265,7 +265,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         with open(output_model, mode="w") as file:
             file.write(self.model)
 
-        datasets.dump_svmlight_file(X, np.zeros(len(X)), f=predict_filepath)
+        datasets.dump_svmlight_file(X, np.zeros(X.shape[0]), f=predict_filepath)
 
         calls = [
             "task = predict\n",
