@@ -89,3 +89,4 @@ print("Best params: ", clf.best_params_)
 Notebooks
 ------------
 * [**Using pyLightGBM for Kaggle competition (Allstate Claims Severity)**](https://github.com/ArdalanM/pyLightGBM/blob/master/notebooks/regression_example_kaggle_allstate.ipynb)
+* [**Bayesian global optimization with pyLightGBM using data from Kaggle competition (Allstate Claims Severity)**](https://github.com/ArdalanM/pyLightGBM/blob/master/notebooks/bayesian optimization_example_kaggle_allstate.ipynb)
