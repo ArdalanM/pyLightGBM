@@ -139,7 +139,11 @@ class GenericGMB(BaseEstimator):
         with open(output_model, mode="w") as file:
             file.write(self.model)
 
+<<<<<<< HEAD
         self._dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
+=======
+        datasets.dump_svmlight_file(X, np.zeros(X.shape[0]), f=predict_filepath)
+>>>>>>> e5d3b864356c7c40ed10e755a0dc41ac014a7dda
 
         calls = ["task = predict\n",
                  "data = {}\n".format(predict_filepath),
@@ -285,7 +289,11 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         with open(output_model, mode="w") as file:
             file.write(self.model)
 
+<<<<<<< HEAD
         self._dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
+=======
+        datasets.dump_svmlight_file(X, np.zeros(X.shape[0]), f=predict_filepath)
+>>>>>>> e5d3b864356c7c40ed10e755a0dc41ac014a7dda
 
         calls = [
             "task = predict\n",
