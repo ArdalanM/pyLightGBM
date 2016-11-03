@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import subprocess
 import numpy as np
+import scipy.sparse as sps
 from collections import Counter
 from sklearn import datasets
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
@@ -65,19 +66,32 @@ class GenericGMB(BaseEstimator):
             'is_unbalance': is_unbalance
         }
 
+    # store data into CSV file and sparce data into SVM 
+    def _dump_data(self, X, y, f, issparse=False):
+        
+        if issparse:
+            datasets.dump_svmlight_file(X,y,f)
+        else:
+            # From LightGBM docs https://github.com/Microsoft/LightGBM/wiki/Quick-Start
+            # Label is the data of first column, and there is no header in the file.
+            np.savetxt(f,X=np.column_stack((y,X)),delimiter=',',newline=os.linesep)
+
     # create tmp dir to hold data and model (especially the latter)
     def fit(self, X, y, test_data=None):
 
         tmp_dir = tempfile.mkdtemp()
-        train_filepath = os.path.abspath("{}/X.svm".format(tmp_dir))
-        datasets.dump_svmlight_file(X, y, train_filepath)
+        issparse = sps.issparse(X)
+        f_format = "svm" if issparse else "csv"
+
+        train_filepath = os.path.abspath("{}/X.{}".format(tmp_dir, f_format))
+        self._dump_data(X, y, train_filepath, issparse)
 
         if test_data:
             valid = []
             for i, (x_test, y_test) in enumerate(test_data):
-                test_filepath = os.path.abspath("{}/X{}_test.svm".format(tmp_dir, i))
+                test_filepath = os.path.abspath("{}/X{}_test.{}".format(tmp_dir, i, f_format))
                 valid.append(test_filepath)
-                datasets.dump_svmlight_file(x_test, y_test, test_filepath)
+                self._dump_data(x_test, y_test, test_filepath, issparse)
             self.param['valid'] = ",".join(valid)
 
         self.param['task'] = 'train'
@@ -114,7 +128,10 @@ class GenericGMB(BaseEstimator):
 
     def predict(self, X):
         tmp_dir = tempfile.mkdtemp()
-        predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.svm"))
+        issparse = sps.issparse(X)
+        f_format = "svm" if issparse else "csv"
+
+        predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.{}".format(f_format)))
         output_model = os.path.abspath(os.path.join(tmp_dir, "model"))
         output_results = os.path.abspath(os.path.join(tmp_dir, "LightGBM_predict_result.txt"))
         conf_filepath = os.path.join(tmp_dir, "predict.conf")
@@ -122,7 +139,7 @@ class GenericGMB(BaseEstimator):
         with open(output_model, mode="w") as file:
             file.write(self.model)
 
-        datasets.dump_svmlight_file(X, np.zeros(X.shape[0]), f=predict_filepath)
+        self._dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
 
         calls = ["task = predict\n",
                  "data = {}\n".format(predict_filepath),
@@ -257,7 +274,10 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
 
     def predict_proba(self, X):
         tmp_dir = tempfile.mkdtemp()
-        predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.svm"))
+        issparse = sps.issparse(X)
+        f_format = "svm" if issparse else "csv"
+
+        predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.{}".format(f_format)))
         output_model = os.path.abspath(os.path.join(tmp_dir, "model"))
         conf_filepath = os.path.join(tmp_dir, "predict.conf")
         output_results = os.path.abspath(os.path.join(tmp_dir, "LightGBM_predict_result.txt"))
@@ -265,7 +285,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         with open(output_model, mode="w") as file:
             file.write(self.model)
 
-        datasets.dump_svmlight_file(X, np.zeros(X.shape[0]), f=predict_filepath)
+        self._dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
 
         calls = [
             "task = predict\n",
