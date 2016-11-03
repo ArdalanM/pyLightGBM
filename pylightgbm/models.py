@@ -11,7 +11,7 @@ import subprocess
 import numpy as np
 import scipy.sparse as sps
 from collections import Counter
-from sklearn import datasets
+from pylightgbm.utils import io_utils
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
 
@@ -66,16 +66,6 @@ class GenericGMB(BaseEstimator):
             'is_unbalance': is_unbalance
         }
 
-    # store data into CSV file and sparce data into SVM 
-    def _dump_data(self, X, y, f, issparse=False):
-        
-        if issparse:
-            datasets.dump_svmlight_file(X,y,f)
-        else:
-            # From LightGBM docs https://github.com/Microsoft/LightGBM/wiki/Quick-Start
-            # Label is the data of first column, and there is no header in the file.
-            np.savetxt(f,X=np.column_stack((y,X)),delimiter=',',newline=os.linesep)
-
     # create tmp dir to hold data and model (especially the latter)
     def fit(self, X, y, test_data=None):
 
@@ -84,14 +74,14 @@ class GenericGMB(BaseEstimator):
         f_format = "svm" if issparse else "csv"
 
         train_filepath = os.path.abspath("{}/X.{}".format(tmp_dir, f_format))
-        self._dump_data(X, y, train_filepath, issparse)
+        io_utils.dump_data(X, y, train_filepath, issparse)
 
         if test_data:
             valid = []
             for i, (x_test, y_test) in enumerate(test_data):
                 test_filepath = os.path.abspath("{}/X{}_test.{}".format(tmp_dir, i, f_format))
                 valid.append(test_filepath)
-                self._dump_data(x_test, y_test, test_filepath, issparse)
+                io_utils.dump_data(x_test, y_test, test_filepath, issparse)
             self.param['valid'] = ",".join(valid)
 
         self.param['task'] = 'train'
@@ -139,7 +129,7 @@ class GenericGMB(BaseEstimator):
         with open(output_model, mode="w") as file:
             file.write(self.model)
 
-        self._dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
+        io_utils.dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
 
         calls = ["task = predict\n",
                  "data = {}\n".format(predict_filepath),
@@ -285,7 +275,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         with open(output_model, mode="w") as file:
             file.write(self.model)
 
-        self._dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
+        io_utils.dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
 
         calls = [
             "task = predict\n",
