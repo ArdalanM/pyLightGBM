@@ -9,8 +9,8 @@ import shutil
 import tempfile
 import subprocess
 import numpy as np
-from collections import Counter
-from sklearn import datasets
+import scipy.sparse as sps
+from pylightgbm.utils import io_utils
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
 
@@ -65,19 +65,21 @@ class GenericGMB(BaseEstimator):
             'is_unbalance': is_unbalance
         }
 
-    # create tmp dir to hold data and model (especially the latter)
     def fit(self, X, y, test_data=None):
-
+        # create tmp dir to hold data and model (especially the latter)
         tmp_dir = tempfile.mkdtemp()
-        train_filepath = os.path.abspath("{}/X.svm".format(tmp_dir))
-        datasets.dump_svmlight_file(X, y, train_filepath)
+        issparse = sps.issparse(X)
+        f_format = "svm" if issparse else "csv"
+
+        train_filepath = os.path.abspath("{}/X.{}".format(tmp_dir, f_format))
+        io_utils.dump_data(X, y, train_filepath, issparse)
 
         if test_data:
             valid = []
             for i, (x_test, y_test) in enumerate(test_data):
-                test_filepath = os.path.abspath("{}/X{}_test.svm".format(tmp_dir, i))
+                test_filepath = os.path.abspath("{}/X{}_test.{}".format(tmp_dir, i, f_format))
                 valid.append(test_filepath)
-                datasets.dump_svmlight_file(x_test, y_test, test_filepath)
+                io_utils.dump_data(x_test, y_test, test_filepath, issparse)
             self.param['valid'] = ",".join(valid)
 
         self.param['task'] = 'train'
@@ -114,7 +116,10 @@ class GenericGMB(BaseEstimator):
 
     def predict(self, X):
         tmp_dir = tempfile.mkdtemp()
-        predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.svm"))
+        issparse = sps.issparse(X)
+        f_format = "svm" if issparse else "csv"
+
+        predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.{}".format(f_format)))
         output_model = os.path.abspath(os.path.join(tmp_dir, "model"))
         output_results = os.path.abspath(os.path.join(tmp_dir, "LightGBM_predict_result.txt"))
         conf_filepath = os.path.join(tmp_dir, "predict.conf")
@@ -122,7 +127,7 @@ class GenericGMB(BaseEstimator):
         with open(output_model, mode="w") as file:
             file.write(self.model)
 
-        datasets.dump_svmlight_file(X, np.zeros(X.shape[0]), f=predict_filepath)
+        io_utils.dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
 
         calls = ["task = predict\n",
                  "data = {}\n".format(predict_filepath),
@@ -179,34 +184,17 @@ class GenericGMB(BaseEstimator):
         """
         assert importance_type in ['weight'], 'For now, only weighted feature importance is implemented'
 
-        pattern_nfeat = re.compile("max_feature_idx=(\d+)")
-        pattern_split_feat = re.compile("split_feature=([\d+\s\d+]+)\n")
-
-        match_nfeat = re.match(pattern_nfeat, self.model)
-        match_split = re.findall(pattern_split_feat, self.model)
-
-        if match_nfeat:
-            # total number of features
-            nfeatures = int(match_nfeat.group(1)) + 1
-        else:
-            raise ValueError
+        match = re.findall("Column_(\d+)=(\d+)", self.model)
 
         if importance_type == 'weight':
-            if match_split:
-                # list of feature index used for splitting a node
-                string_of_idx = " ".join(match_split)
-                list_of_int = [int(val) for val in string_of_idx.split(" ")]
+            if len(match) > 0:
+                dic_fi = {int(k): int(value) for k, value in match}
+                if len(feature_names) > 0:
+                    dic_fi = {feature_names[key]: dic_fi[key] for key in dic_fi}
+            else:
+                dic_fi = {}
 
-            # Sorted list of [(feature_index, feature_importance)]
-            feat_importance = Counter(list_of_int).most_common()
-            feat_importance = [(idx, importance / float(nfeatures))
-                               for idx, importance in feat_importance]
-
-        if len(feature_names) > 0:
-            feat_importance = [(feature_names[idx], importance)
-                               for idx, importance in feat_importance]
-
-        return feat_importance
+        return dic_fi
 
 
 class GBMClassifier(GenericGMB, ClassifierMixin):
@@ -257,7 +245,10 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
 
     def predict_proba(self, X):
         tmp_dir = tempfile.mkdtemp()
-        predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.svm"))
+        issparse = sps.issparse(X)
+        f_format = "svm" if issparse else "csv"
+
+        predict_filepath = os.path.abspath(os.path.join(tmp_dir, "X_to_pred.{}".format(f_format)))
         output_model = os.path.abspath(os.path.join(tmp_dir, "model"))
         conf_filepath = os.path.join(tmp_dir, "predict.conf")
         output_results = os.path.abspath(os.path.join(tmp_dir, "LightGBM_predict_result.txt"))
@@ -265,7 +256,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         with open(output_model, mode="w") as file:
             file.write(self.model)
 
-        datasets.dump_svmlight_file(X, np.zeros(X.shape[0]), f=predict_filepath)
+        io_utils.dump_data(X, np.zeros(X.shape[0]), predict_filepath, issparse)
 
         calls = [
             "task = predict\n",
