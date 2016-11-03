@@ -5,7 +5,9 @@
 """
 
 import pytest
+import pickle
 import numpy as np
+import scipy.sparse as sps
 from sklearn import datasets, metrics, model_selection
 from pylightgbm.models import GBMClassifier, GBMRegressor
 
@@ -53,6 +55,21 @@ class TestGBMClassifier(object):
         score = metrics.accuracy_score(Y, clf.predict(X))
         assert score > 0.75
 
+    def test_sparse(self):
+
+        clf = GBMClassifier(exec_path=path_to_exec, min_data_in_leaf=1, learning_rate=0.001, num_leaves=5)
+        clf.fit(sps.csr_matrix(X), Y)
+        score = metrics.accuracy_score(Y, clf.predict(sps.csr_matrix(X)))
+        assert score > 0.9
+
+    def test_pickle(self):
+
+        clf = GBMClassifier(exec_path=path_to_exec, verbose=False)
+        clf.fit(X, Y)
+        pickle.dump(clf, open("clf_gbm.pkl", "wb"))
+        clf2 = pickle.load(open("clf_gbm.pkl", "rb"))
+        assert np.allclose(clf.predict(X), clf2.predict(X))
+
 
 class TestGBMRegressor(object):
     def test_simple_fit(self):
@@ -90,6 +107,20 @@ class TestGBMRegressor(object):
         score = metrics.mean_squared_error(Yreg, clf.predict(Xreg))
         print(score)
         assert score < 2000
+
+    def test_sparse(self):
+        clf = GBMRegressor(exec_path=path_to_exec, num_iterations=1000,
+                           min_data_in_leaf=5, learning_rate=0.1, num_leaves=10, verbose=False)
+        clf.fit(sps.csr_matrix(Xreg), Yreg)
+        score = metrics.mean_squared_error(Yreg, clf.predict(sps.csr_matrix(Xreg)))
+        assert score < 1.
+
+    def test_pickle(self):
+        clf = GBMRegressor(exec_path=path_to_exec, verbose=False)
+        clf.fit(Xreg, Yreg)
+        pickle.dump(clf, open("clf_gbm.pkl", "wb"))
+        clf2 = pickle.load(open("clf_gbm.pkl", "rb"))
+        assert np.allclose(clf.predict(Xreg), clf2.predict(Xreg))
 
 
 if __name__ == '__main__':
