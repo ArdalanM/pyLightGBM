@@ -6,6 +6,7 @@
 
 import pytest
 import numpy as np
+import scipy.sparse as sps
 from sklearn import datasets, metrics, model_selection
 from pylightgbm.models import GBMClassifier, GBMRegressor
 
@@ -53,6 +54,13 @@ class TestGBMClassifier(object):
         score = metrics.accuracy_score(Y, clf.predict(X))
         assert score > 0.75
 
+    def test_sparse(self):
+
+        clf = GBMClassifier(exec_path=path_to_exec, min_data_in_leaf=1, learning_rate=0.001, num_leaves=5)
+        clf.fit(sps.csr_matrix(X), Y)
+        score = metrics.accuracy_score(Y, clf.predict(sps.csr_matrix(X)))
+        assert score > 0.9
+
 
 class TestGBMRegressor(object):
     def test_simple_fit(self):
@@ -90,6 +98,12 @@ class TestGBMRegressor(object):
         score = metrics.mean_squared_error(Yreg, clf.predict(Xreg))
         print(score)
         assert score < 2000
+
+    def test_sparse(self):
+        clf = GBMRegressor(exec_path=path_to_exec, min_data_in_leaf=1, learning_rate=0.001, num_leaves=5)
+        clf.fit(sps.csr_matrix(X), Y)
+        score = metrics.mean_squared_error(Y, clf.predict(sps.csr_matrix(X)))
+        assert score < 1.
 
 
 if __name__ == '__main__':
