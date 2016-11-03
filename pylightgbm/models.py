@@ -10,7 +10,6 @@ import tempfile
 import subprocess
 import numpy as np
 import scipy.sparse as sps
-from collections import Counter
 from pylightgbm.utils import io_utils
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
@@ -66,9 +65,8 @@ class GenericGMB(BaseEstimator):
             'is_unbalance': is_unbalance
         }
 
-    # create tmp dir to hold data and model (especially the latter)
     def fit(self, X, y, test_data=None):
-
+        # create tmp dir to hold data and model (especially the latter)
         tmp_dir = tempfile.mkdtemp()
         issparse = sps.issparse(X)
         f_format = "svm" if issparse else "csv"
@@ -186,34 +184,17 @@ class GenericGMB(BaseEstimator):
         """
         assert importance_type in ['weight'], 'For now, only weighted feature importance is implemented'
 
-        pattern_nfeat = re.compile("max_feature_idx=(\d+)")
-        pattern_split_feat = re.compile("split_feature=([\d+\s\d+]+)\n")
-
-        match_nfeat = re.match(pattern_nfeat, self.model)
-        match_split = re.findall(pattern_split_feat, self.model)
-
-        if match_nfeat:
-            # total number of features
-            nfeatures = int(match_nfeat.group(1)) + 1
-        else:
-            raise ValueError
+        match = re.findall("Column_(\d+)=(\d+)", self.model)
 
         if importance_type == 'weight':
-            if match_split:
-                # list of feature index used for splitting a node
-                string_of_idx = " ".join(match_split)
-                list_of_int = [int(val) for val in string_of_idx.split(" ")]
+            if len(match) > 0:
+                dic_fi = {int(k): int(value) for k, value in match}
+                if len(feature_names) > 0:
+                    dic_fi = {feature_names[key]: dic_fi[key] for key in dic_fi}
+            else:
+                dic_fi = {}
 
-            # Sorted list of [(feature_index, feature_importance)]
-            feat_importance = Counter(list_of_int).most_common()
-            feat_importance = [(idx, importance / float(nfeatures))
-                               for idx, importance in feat_importance]
-
-        if len(feature_names) > 0:
-            feat_importance = [(feature_names[idx], importance)
-                               for idx, importance in feat_importance]
-
-        return feat_importance
+        return dic_fi
 
 
 class GBMClassifier(GenericGMB, ClassifierMixin):
