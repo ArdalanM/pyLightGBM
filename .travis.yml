@@ -1,0 +1,48 @@
+sudo: required
+dist: trusty
+language: python
+
+python:
+  - "3.4"
+  - "2.7"
+
+
+install:
+  - sudo apt-get update
+  # We do this conditionally because it saves us some downloading if the
+  # version is the same.
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  #  Install LightGBM
+  - sudo apt-get install -y libopenmpi-dev openmpi-bin build-essential
+  - git clone --recursive https://github.com/Microsoft/LightGBM $HOME/LightGBM
+  - cd $HOME/LightGBM && mkdir build && cd build && cmake .. && make -j
+  - export LIGHTGBM_EXEC="$HOME/LightGBM/lightgbm"
+  - echo -e "LighGBM executable:\n$(echo $LIGHTGBM_EXEC)"
+  - cd $TRAVIS_BUILD_DIR
+
+  # Replace dep1 dep2 ... with your dependencies
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+  - source activate test-environment
+  - pip install pytest pytest-cov python-coveralls pytest-xdist coverage==3.7.1 #we need this version of coverage for coveralls.io to work
+  - pip install pep8 pytest-pep8
+  - pip install -r requirements.txt
+  - python setup.py install
+
+script:
+  PYTHONPATH=$PWD:$PYTHONPATH py.test --pep8 -m pep8 -n0;
+  PYTHONPATH=$PWD:$PYTHONPATH py.test tests/;
+
+after_success:
+  - coveralls
