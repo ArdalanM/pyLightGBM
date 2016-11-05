@@ -1,5 +1,9 @@
 pyLightGBM
 ==========
+[![Build Status](https://travis-ci.org/ArdalanM/pyLightGBM.svg?branch=feat_ci)](https://travis-ci.org/ArdalanM/pyLightGBM)
+[![Coverage Status](https://coveralls.io/repos/github/ArdalanM/pyLightGBM/badge.svg?branch=master)](https://coveralls.io/github/ArdalanM/pyLightGBM?branch=master)
+[![Packagist](https://img.shields.io/packagist/l/doctrine/orm.svg)]()
+
 Python binding for Microsoft LightGBM: https://github.com/Microsoft/LightGBM
 
 **pyLightGBM** have several advantages:
