@@ -36,6 +36,7 @@ class GenericGMB(BaseEstimator):
                  early_stopping_round=0,
                  max_bin=255,
                  is_unbalance=False,
+                 num_class=1,
                  verbose=True,
                  model=None):
 
@@ -68,7 +69,8 @@ class GenericGMB(BaseEstimator):
             'metric_freq': metric_freq,
             'early_stopping_round': early_stopping_round,
             'max_bin': max_bin,
-            'is_unbalance': is_unbalance
+            'is_unbalance': is_unbalance,
+            'num_class': num_class
         }
 
     def fit(self, X, y, test_data=None):
@@ -224,6 +226,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                  early_stopping_round=0,
                  max_bin=255,
                  is_unbalance=False,
+                 num_class=1,
                  verbose=True,
                  model=None):
         super(GBMClassifier, self).__init__(exec_path=exec_path,
@@ -246,6 +249,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                                             early_stopping_round=early_stopping_round,
                                             max_bin=max_bin,
                                             is_unbalance=is_unbalance,
+                                            num_class=num_class,
                                             verbose=verbose,
                                             model=model)
 
@@ -284,12 +288,20 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         else:
             process.communicate()
 
-        probability_of_one = np.loadtxt(output_results, dtype=float)
-        probability_of_zero = 1 - probability_of_one
+        raw_probabilities = np.loadtxt(output_results, dtype=float)
+
+        if self.param['application'] == 'multiclass':
+            y_prob = raw_probabilities
+
+        elif self.param['application'] == 'binary':
+            probability_of_one = raw_probabilities
+            probability_of_zero = 1 - probability_of_one
+            y_prob = np.transpose(np.vstack((probability_of_zero, probability_of_one)))
+        else:
+            raise
 
         shutil.rmtree(tmp_dir)
-
-        return np.transpose(np.vstack((probability_of_zero, probability_of_one)))
+        return y_prob
 
     def predict(self, X):
         y_prob = self.predict_proba(X)
@@ -317,6 +329,7 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                  early_stopping_round=0,
                  max_bin=255,
                  is_unbalance=False,
+                 num_class=1,
                  verbose=True,
                  model=None):
         super(GBMRegressor, self).__init__(exec_path=exec_path,
@@ -339,5 +352,6 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                                            early_stopping_round=early_stopping_round,
                                            max_bin=max_bin,
                                            is_unbalance=is_unbalance,
+                                           num_class=num_class,
                                            verbose=verbose,
                                            model=model)
