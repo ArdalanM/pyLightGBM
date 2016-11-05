@@ -18,7 +18,7 @@ X, Y = datasets.make_classification(n_samples=1000, n_features=500, random_state
 
 skf = model_selection.StratifiedKFold(n_splits=nfolds, random_state=seed)
 
-clf = GBMClassifier(exec_path=path_to_exec, num_iterations=1000, min_data_in_leaf=1,  num_leaves=10,
+clf = GBMClassifier(exec_path=path_to_exec, num_iterations=1000, min_data_in_leaf=1, num_leaves=10,
                     metric='binary_error', learning_rate=0.1, early_stopping_round=10, verbose=False)
 
 best_rounds = []
