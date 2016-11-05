@@ -5,6 +5,7 @@
 """
 import os
 import re
+import sys
 import shutil
 import tempfile
 import subprocess
@@ -39,7 +40,12 @@ class GenericGMB(BaseEstimator):
                  model=None):
 
         # '~/path/to/lightgbm' becomes 'absolute/path/to/lightgbm'
-        self.exec_path = os.path.expanduser(exec_path)
+        try:
+            self.exec_path = os.environ['LIGHTGBM_EXEC']
+        except KeyError:
+            print("pyLightGBM is looking for 'LIGHTGBM_EXEC' environment variable, cannot be found.")
+            print("exec_path will be deprecated in favor of environment variable")
+            self.exec_path = os.path.expanduser(exec_path)
 
         self.config = config
         self.model = model
