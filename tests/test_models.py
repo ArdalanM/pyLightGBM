@@ -15,9 +15,12 @@ from pylightgbm.models import GBMClassifier, GBMRegressor
 path_to_exec = "~/Documents/apps/LightGBM/lightgbm"
 seed = 1337
 test_size = 0.2
+n_classes = 3
 np.random.seed(seed)
 
-X, Y = datasets.make_classification(n_samples=100, n_features=10, random_state=seed)
+X, Y = datasets.make_classification(n_samples=100, n_features=10, n_classes=2, random_state=seed)
+Xmulti, Ymulti = datasets.make_multilabel_classification(n_samples=100, n_features=10,
+                                                         n_classes=n_classes, random_state=seed)
 Xreg, Yreg = datasets.make_regression(n_samples=100, n_features=10, random_state=seed)
 
 
@@ -69,6 +72,16 @@ class TestGBMClassifier(object):
         pickle.dump(clf, open("clf_gbm.pkl", "wb"))
         clf2 = pickle.load(open("clf_gbm.pkl", "rb"))
         assert np.allclose(clf.predict(X), clf2.predict(X))
+
+    def test_multiclass(self):
+
+        clf = GBMClassifier(exec_path=path_to_exec, min_data_in_leaf=1, learning_rate=0.1,
+                            num_leaves=5, num_class=n_classes, metric='multi_logloss',
+                            application='multiclass', num_iterations=100)
+        clf.fit(Xmulti, Ymulti.argmax(-1))
+        clf.fit(Xmulti, Ymulti.argmax(-1), test_data=[(Xmulti, Ymulti.argmax(-1))])
+        score = metrics.accuracy_score(Ymulti.argmax(-1), clf.predict(Xmulti))
+        assert score > 0.8
 
 
 class TestGBMRegressor(object):
