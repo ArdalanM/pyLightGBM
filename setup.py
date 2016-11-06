@@ -1,14 +1,25 @@
 from setuptools import setup
 from setuptools import find_packages
 
-setup(name='pylightgbm',
+setup(name='pyLightGBM',
       version='0.2.3',
-      description='Python wrapper of Microsoft LightGBM',
+      description='Python binding for Microsoft LightGBM',
       author='Ardalan MEHRANI',
       author_email='ardalan77400@gmail.com',
       url='https://github.com/ArdalanM/pyLightGBM',
       download_url='https://github.com/ArdalanM/pyLightGBM',
       license='MIT',
+      classifiers=['License :: MIT License',
+                   'Programming Language :: Python',
+                   'Operating System :: Microsoft :: Windows',
+                   'Operating System :: POSIX',
+                   'Operating System :: Unix',
+                   'Operating System :: MacOS',
+                   'Programming Language :: Python :: 2.7',
+                   'Programming Language :: Python :: 3',
+                   'Programming Language :: Python :: 3.4',
+                   'Programming Language :: Python :: 3.5',
+                   ],
       install_requires=[],
       extras_require={},
       packages=find_packages())
