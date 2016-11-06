@@ -37,6 +37,7 @@ class GenericGMB(BaseEstimator):
                  max_bin=255,
                  is_unbalance=False,
                  num_class=1,
+                 boosting_type='gbdt',
                  verbose=True,
                  model=None):
 
@@ -70,7 +71,8 @@ class GenericGMB(BaseEstimator):
             'early_stopping_round': early_stopping_round,
             'max_bin': max_bin,
             'is_unbalance': is_unbalance,
-            'num_class': num_class
+            'num_class': num_class,
+            'boosting_type': boosting_type
         }
 
     def fit(self, X, y, test_data=None):
@@ -227,6 +229,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                  max_bin=255,
                  is_unbalance=False,
                  num_class=1,
+                 boosting_type='gbdt',
                  verbose=True,
                  model=None):
         super(GBMClassifier, self).__init__(exec_path=exec_path,
@@ -250,6 +253,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                                             max_bin=max_bin,
                                             is_unbalance=is_unbalance,
                                             num_class=num_class,
+                                            boosting_type=boosting_type,
                                             verbose=verbose,
                                             model=model)
 
@@ -330,6 +334,7 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                  max_bin=255,
                  is_unbalance=False,
                  num_class=1,
+                 boosting_type='gbdt',
                  verbose=True,
                  model=None):
         super(GBMRegressor, self).__init__(exec_path=exec_path,
@@ -353,5 +358,6 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                                            max_bin=max_bin,
                                            is_unbalance=is_unbalance,
                                            num_class=num_class,
+                                           boosting_type=boosting_type,
                                            verbose=verbose,
                                            model=model)
