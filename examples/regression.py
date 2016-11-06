@@ -9,13 +9,11 @@ from pylightgbm.models import GBMRegressor
 
 # Parameters
 seed = 1337
-nfolds = 5
 path_to_exec = "~/Documents/apps/LightGBM/lightgbm"
-test_size = 0.2
 
 np.random.seed(seed) # for reproducibility
 X, y = datasets.load_diabetes(return_X_y=True)
-x_train, x_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=test_size, random_state=seed)
+x_train, x_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=seed)
 
 # 'exec_path' is the path to lightgbm executable
 clf = GBMRegressor(exec_path=path_to_exec,
