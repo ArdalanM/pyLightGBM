@@ -9,9 +9,7 @@ from sklearn import datasets, metrics, model_selection
 
 # Parameters
 seed = 1337
-nfolds = 5
 path_to_exec = "~/Documents/apps/LightGBM/lightgbm"
-
 np.random.seed(seed)  # for reproducibility
 
 X, Y = datasets.load_diabetes(return_X_y=True)
