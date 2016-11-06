@@ -10,13 +10,11 @@ from pylightgbm.models import GBMClassifier
 
 # Parameters
 seed = 1337
-nfolds = 5
-test_size = 0.2
 path_to_exec = "~/Documents/apps/LightGBM/lightgbm"
 np.random.seed(seed)  # for reproducibility
 
-X, Y = datasets.make_classification(n_samples=1000, n_features=100, random_state=seed)
-x_train, x_test, y_train, y_test = model_selection.train_test_split(X, Y, test_size=test_size, random_state=seed)
+X, Y = datasets.make_classification(n_samples=1000, n_features=100, n_classes=2, random_state=seed)
+x_train, x_test, y_train, y_test = model_selection.train_test_split(X, Y, test_size=0.2, random_state=seed)
 
 # 'exec_path' is the path to lightgbm executable
 clf = GBMClassifier(exec_path=path_to_exec,
