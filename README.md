@@ -3,9 +3,7 @@ pyLightGBM: python binding for [Microsoft LightGBM](https://github.com/Microsoft
 [![Build Status](https://travis-ci.org/ArdalanM/pyLightGBM.svg?branch=feat_ci)](https://travis-ci.org/ArdalanM/pyLightGBM)
 [![Coverage Status](https://coveralls.io/repos/github/ArdalanM/pyLightGBM/badge.svg?branch=master)](https://coveralls.io/github/ArdalanM/pyLightGBM?branch=master)
 [![Packagist](https://img.shields.io/packagist/l/doctrine/orm.svg)]()
-
-
-**pyLightGBM** have several advantages:
+Features:
  - Regression, Classification (binary, multi class)
  - Feature importance (```clf.feature_importance()```)
  - Early stopping (```clf.best_round```)
@@ -21,8 +19,7 @@ Install lastest verion of [Microsoft LightGBM](https://github.com/Microsoft/Ligh
  ```
 
 Examples
-------------
-
+--------
 * Regression:
 
 ```python
