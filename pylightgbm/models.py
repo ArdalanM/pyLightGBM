@@ -104,18 +104,17 @@ class GenericGMB(BaseEstimator):
                 f.writelines(calls)
 
             process = subprocess.Popen([self.exec_path, "config={}".format(conf_filepath)],
-                                       stdout=subprocess.PIPE)
+                                       stdout=subprocess.PIPE, bufsize=1)
 
         else:
             process = subprocess.Popen([self.exec_path, "config={}".format(self.config)],
-                                       stdout=subprocess.PIPE)
+                                       stdout=subprocess.PIPE, bufsize=1)
 
-        if self.verbose:
-            while process.poll() is None:
-                line = process.stdout.readline()
-                print(line.strip().decode('utf-8'))
-        else:
-            process.communicate()
+        with process.stdout:
+            for line in iter(process.stdout.readline, b''):
+                print(line.strip().decode('utf-8')) if self.verbose else None
+        # wait for the subprocess to exit
+        process.wait()
 
         with open(self.param['output_model'], mode='r') as file:
             self.model = file.read()
@@ -148,14 +147,13 @@ class GenericGMB(BaseEstimator):
             f.writelines(calls)
 
         process = subprocess.Popen([self.exec_path, "config={}".format(conf_filepath)],
-                                   stdout=subprocess.PIPE)
+                                   stdout=subprocess.PIPE, bufsize=1)
 
-        if self.verbose:
-            while process.poll() is None:
-                line = process.stdout.readline()
-                print(line.strip().decode('utf-8'))
-        else:
-            process.communicate()
+        with process.stdout:
+            for line in iter(process.stdout.readline, b''):
+                print(line.strip().decode('utf-8')) if self.verbose else None
+        # wait for the subprocess to exit
+        process.wait()
 
         y_pred = np.loadtxt(output_results, dtype=float)
         shutil.rmtree(tmp_dir)
@@ -283,14 +281,13 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
             f.writelines(calls)
 
         process = subprocess.Popen([self.exec_path, "config={}".format(conf_filepath)],
-                                   stdout=subprocess.PIPE)
+                                   stdout=subprocess.PIPE, bufsize=1)
 
-        if self.verbose:
-            while process.poll() is None:
-                line = process.stdout.readline()
-                print(line.strip().decode('utf-8'))
-        else:
-            process.communicate()
+        with process.stdout:
+            for line in iter(process.stdout.readline, b''):
+                print(line.strip().decode('utf-8')) if self.verbose else None
+        # wait for the subprocess to exit
+        process.wait()
 
         raw_probabilities = np.loadtxt(output_results, dtype=float)
 
