@@ -38,6 +38,7 @@ class GenericGMB(BaseEstimator):
                  is_unbalance=False,
                  num_class=1,
                  boosting_type='gbdt',
+                 min_sum_hessian_in_leaf=10,
                  verbose=True,
                  model=None):
 
@@ -72,7 +73,8 @@ class GenericGMB(BaseEstimator):
             'max_bin': max_bin,
             'is_unbalance': is_unbalance,
             'num_class': num_class,
-            'boosting_type': boosting_type
+            'boosting_type': boosting_type,
+            'min_sum_hessian_in_leaf': min_sum_hessian_in_leaf
         }
 
     def fit(self, X, y, test_data=None):
@@ -228,6 +230,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                  is_unbalance=False,
                  num_class=1,
                  boosting_type='gbdt',
+                 min_sum_hessian_in_leaf=10,
                  verbose=True,
                  model=None):
         super(GBMClassifier, self).__init__(exec_path=exec_path,
@@ -252,6 +255,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                                             is_unbalance=is_unbalance,
                                             num_class=num_class,
                                             boosting_type=boosting_type,
+                                            min_sum_hessian_in_leaf=min_sum_hessian_in_leaf,
                                             verbose=verbose,
                                             model=model)
 
@@ -332,6 +336,7 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                  is_unbalance=False,
                  num_class=1,
                  boosting_type='gbdt',
+                 min_sum_hessian_in_leaf=10,
                  verbose=True,
                  model=None):
         super(GBMRegressor, self).__init__(exec_path=exec_path,
@@ -356,5 +361,6 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                                            is_unbalance=is_unbalance,
                                            num_class=num_class,
                                            boosting_type=boosting_type,
+                                           min_sum_hessian_in_leaf=min_sum_hessian_in_leaf,
                                            verbose=verbose,
                                            model=model)
