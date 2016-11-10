@@ -35,7 +35,7 @@ install:
   # Replace dep1 dep2 ... with your dependencies
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
-  - pip install pytest pytest-cov python-coveralls pytest-xdist coverage==3.7.1 #we need this version of coverage for coveralls.io to work
+  - pip install pytest pytest-cov python-coveralls pytest-xdist coverage #we need this version of coverage for coveralls.io to work
   - pip install pep8 pytest-pep8
   - pip install -r requirements.txt
   - python setup.py install
