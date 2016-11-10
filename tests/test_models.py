@@ -26,7 +26,8 @@ Xreg, Yreg = datasets.make_regression(n_samples=100, n_features=10, random_state
 
 class TestGBMClassifier(object):
     def test_simple_fit(self):
-        clf = GBMClassifier(exec_path=path_to_exec, min_data_in_leaf=1, learning_rate=0.001, num_leaves=5)
+        clf = GBMClassifier(exec_path=path_to_exec, num_iterations=100,
+                            min_data_in_leaf=1, learning_rate=0.1, num_leaves=5)
         clf.fit(X, Y)
         score = metrics.accuracy_score(Y, clf.predict(X))
         assert score > 0.9
@@ -60,7 +61,8 @@ class TestGBMClassifier(object):
 
     def test_sparse(self):
 
-        clf = GBMClassifier(exec_path=path_to_exec, min_data_in_leaf=1, learning_rate=0.001, num_leaves=5)
+        clf = GBMClassifier(exec_path=path_to_exec, num_iterations=100,
+                            min_data_in_leaf=1, learning_rate=0.1, num_leaves=5)
         clf.fit(sps.csr_matrix(X), Y)
         score = metrics.accuracy_score(Y, clf.predict(sps.csr_matrix(X)))
         assert score > 0.9
