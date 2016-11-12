@@ -2,7 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 setup(name='pyLightGBM',
-      version='0.2.5',
+      version='0.2.6',
       description='Python binding for Microsoft LightGBM',
       author='Ardalan MEHRANI',
       author_email='ardalan77400@gmail.com',
