@@ -39,6 +39,8 @@ class GenericGMB(BaseEstimator):
                  num_class=1,
                  boosting_type='gbdt',
                  min_sum_hessian_in_leaf=10,
+                 drop_rate=0.01,
+                 drop_seed=4,
                  verbose=True,
                  model=None):
 
@@ -74,7 +76,9 @@ class GenericGMB(BaseEstimator):
             'is_unbalance': is_unbalance,
             'num_class': num_class,
             'boosting_type': boosting_type,
-            'min_sum_hessian_in_leaf': min_sum_hessian_in_leaf
+            'min_sum_hessian_in_leaf': min_sum_hessian_in_leaf,
+            'drop_rate': drop_rate,
+            'drop_seed': drop_seed
         }
 
     def fit(self, X, y, test_data=None):
@@ -231,6 +235,8 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                  num_class=1,
                  boosting_type='gbdt',
                  min_sum_hessian_in_leaf=10,
+                 drop_rate=0.01,
+                 drop_seed=4,
                  verbose=True,
                  model=None):
         super(GBMClassifier, self).__init__(exec_path=exec_path,
@@ -256,6 +262,8 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                                             num_class=num_class,
                                             boosting_type=boosting_type,
                                             min_sum_hessian_in_leaf=min_sum_hessian_in_leaf,
+                                            drop_rate=drop_rate,
+                                            drop_seed=drop_seed,
                                             verbose=verbose,
                                             model=model)
 
@@ -337,6 +345,8 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                  num_class=1,
                  boosting_type='gbdt',
                  min_sum_hessian_in_leaf=10,
+                 drop_rate=0.01,
+                 drop_seed=4,
                  verbose=True,
                  model=None):
         super(GBMRegressor, self).__init__(exec_path=exec_path,
@@ -362,5 +372,7 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                                            num_class=num_class,
                                            boosting_type=boosting_type,
                                            min_sum_hessian_in_leaf=min_sum_hessian_in_leaf,
+                                           drop_rate=drop_rate,
+                                           drop_seed=drop_seed,
                                            verbose=verbose,
                                            model=model)
