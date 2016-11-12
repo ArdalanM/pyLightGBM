@@ -17,63 +17,136 @@ seed = 1337
 test_size = 0.2
 n_classes = 3
 np.random.seed(seed)
+dataset_params = {'n_samples': 100, 'n_features': 10, 'random_state': seed}
 
-X, Y = datasets.make_classification(n_samples=100, n_features=10, n_classes=2, random_state=seed)
-Xmulti, Ymulti = datasets.make_multilabel_classification(n_samples=100, n_features=10,
-                                                         n_classes=n_classes, random_state=seed)
-Xreg, Yreg = datasets.make_regression(n_samples=100, n_features=10, random_state=seed)
+X, Y = datasets.make_classification(n_classes=2, **dataset_params)
+Xmulti, Ymulti = datasets.make_multilabel_classification(n_classes=n_classes, **dataset_params)
+Xreg, Yreg = datasets.make_regression(**dataset_params)
 
 
-class TestGBMClassifier(object):
+class TestGBM(object):
     def test_simple_fit(self):
-        clf = GBMClassifier(exec_path=path_to_exec, num_iterations=100,
-                            min_data_in_leaf=1, learning_rate=0.1, num_leaves=5)
-        clf.fit(X, Y)
-        score = metrics.accuracy_score(Y, clf.predict(X))
-        assert score > 0.9
+
+        params = dict(exec_path=path_to_exec, num_iterations=100, min_data_in_leaf=1,
+                      learning_rate=0.1, num_leaves=5)
+        clfs = [
+            [Xreg, Yreg, 'regression', GBMRegressor(boosting_type='gbdt', **params)],
+            [Xreg, Yreg, 'regression', GBMRegressor(boosting_type='dart', **params)],
+            [X, Y, 'classification', GBMClassifier(boosting_type='gbdt', **params)],
+            [X, Y, 'classification', GBMClassifier(boosting_type='dart', **params)],
+        ]
+
+        for x, y, name, clf in clfs:
+            clf.fit(x, y)
+
+            if name == 'regression':
+                score = metrics.mean_squared_error(y, clf.predict(x))
+                score < 1.
+            else:
+                score = metrics.accuracy_score(Y, clf.predict(X))
+                assert score > 0.9
 
     def test_early_stopping(self):
-        num_iterations = 10000
-        x_train, x_test, y_train, y_test = model_selection.train_test_split(X, Y, test_size=test_size,
-                                                                            random_state=seed)
-        clf = GBMClassifier(exec_path=path_to_exec, num_iterations=num_iterations,
-                            min_data_in_leaf=3, learning_rate=0.01, num_leaves=2, early_stopping_round=2)
-        clf.fit(x_train, y_train, test_data=[(x_test, y_test)])
-        score = metrics.accuracy_score(y_test, clf.predict(x_test))
-        assert (score > 0.7 and clf.best_round < num_iterations)
+
+        cv_params = dict(test_size=test_size, random_state=seed)
+        xtr, xte, ytr, yte = model_selection.train_test_split(X, Y, **cv_params)
+        xtr_reg, xte_reg, ytr_reg, yte_reg = model_selection.train_test_split(X, Y, **cv_params)
+
+        params = dict(exec_path=path_to_exec, num_iterations=10000, min_data_in_leaf=3,
+                      learning_rate=0.01, num_leaves=2, early_stopping_round=2)
+        clfs = [
+            [xtr_reg, ytr_reg, xte_reg, yte_reg, 'regression', GBMRegressor(boosting_type='gbdt', **params)],
+            [xtr_reg, ytr_reg, xte_reg, yte_reg, 'regression', GBMRegressor(boosting_type='dart', **params)],
+            [xtr, ytr, xte, yte, 'classification', GBMClassifier(boosting_type='gbdt', **params)],
+            [xtr, ytr, xte, yte, 'classification', GBMClassifier(boosting_type='dart', **params)],
+        ]
+
+        for xtr, ytr, xte, yte, name, clf in clfs:
+            clf.fit(xtr, ytr, test_data=[(xte, yte)])
+
+            if name == 'regression':
+                score = metrics.mean_squared_error(yte, clf.predict(xte))
+                assert (score < 1. and clf.best_round < clf.param['num_iterations'])
+            else:
+                score = metrics.accuracy_score(yte, clf.predict(xte))
+                assert (score > 0.7 and clf.best_round < clf.param['num_iterations'])
 
     def test_grid_search(self):
-        gbm = GBMClassifier(exec_path=path_to_exec, num_iterations=100, learning_rate=0.01,
-                            min_data_in_leaf=1, num_leaves=5, bagging_freq=2,
-                            metric='binary_logloss', verbose=False)
 
         param_grid = {
             'learning_rate': [0.01, 0.1, 1],
             'num_leaves': [2, 5, 50],
             'min_data_in_leaf': [1, 10, 100],
-            'bagging_fraction': [0.1, 0.5]
+            'bagging_fraction': [0.1, 1]
         }
-        scorer = metrics.make_scorer(metrics.accuracy_score, greater_is_better=True)
-        clf = model_selection.GridSearchCV(gbm, param_grid, scoring=scorer, cv=2, refit=True)
-        clf.fit(X, Y)
-        score = metrics.accuracy_score(Y, clf.predict(X))
-        assert score > 0.75
+
+        params = {
+            'exec_path': path_to_exec, 'num_threads': 2,
+            'num_iterations': 100, 'learning_rate': 0.1,
+            'min_data_in_leaf': 1, 'num_leaves': 10,
+            'bagging_freq': 2, 'verbose': False
+        }
+
+        clfs = [
+            [Xreg, Yreg, 'regression', GBMRegressor(boosting_type='gbdt', metric='l2', **params)],
+            [Xreg, Yreg, 'regression', GBMRegressor(boosting_type='dart', metric='l2', **params)],
+            [X, Y, 'classification', GBMClassifier(boosting_type='gbdt', metric='binary_logloss', **params)],
+            [X, Y, 'classification', GBMClassifier(boosting_type='dart', metric='binary_logloss', **params)],
+        ]
+
+        for x, y, name, clf in clfs:
+
+            if name == 'regression':
+                scorer = metrics.make_scorer(metrics.mean_squared_error, greater_is_better=False)
+                grid = model_selection.GridSearchCV(clf, param_grid, scoring=scorer, cv=2, refit=True)
+                grid.fit(x, y)
+
+                score = metrics.mean_squared_error(y, grid.predict(x))
+                print(score)
+                assert score < 2000
+            else:
+                scorer = metrics.make_scorer(metrics.accuracy_score, greater_is_better=True)
+                grid = model_selection.GridSearchCV(clf, param_grid, scoring=scorer, cv=2, refit=True)
+                grid.fit(x, y)
+
+                score = metrics.accuracy_score(y, grid.predict(x))
+                print(score)
+                assert score > .9
 
     def test_sparse(self):
 
-        clf = GBMClassifier(exec_path=path_to_exec, num_iterations=100,
-                            min_data_in_leaf=1, learning_rate=0.1, num_leaves=5)
-        clf.fit(sps.csr_matrix(X), Y)
-        score = metrics.accuracy_score(Y, clf.predict(sps.csr_matrix(X)))
-        assert score > 0.9
+        params = {'exec_path': path_to_exec, 'num_iterations': 1000, 'verbose': False,
+                  'min_data_in_leaf': 1, 'learning_rate': 0.1, 'num_leaves': 5}
+
+        clfs = [
+            [sps.csr_matrix(X), Y, 'classification', GBMClassifier(**params)],
+            [sps.csr_matrix(Xreg), Yreg, 'regression', GBMRegressor(**params)],
+        ]
+
+        for x, y, name, clf in clfs:
+            clf.fit(x, y)
+
+            if name == 'classification':
+                score = metrics.accuracy_score(y, clf.predict(x))
+                assert score > 0.9
+            else:
+                score = metrics.mean_squared_error(y, clf.predict(x))
+                assert score < 1.
 
     def test_pickle(self):
 
-        clf = GBMClassifier(exec_path=path_to_exec, verbose=False)
-        clf.fit(X, Y)
-        pickle.dump(clf, open("clf_gbm.pkl", "wb"))
-        clf2 = pickle.load(open("clf_gbm.pkl", "rb"))
-        assert np.allclose(clf.predict(X), clf2.predict(X))
+        params = {'exec_path': path_to_exec, 'verbose': False}
+
+        clfs = [
+            [X, Y, GBMClassifier(**params)],
+            [Xreg, Yreg, GBMRegressor(**params)],
+        ]
+
+        for x, y, clf in clfs:
+            clf.fit(X, Y)
+            pickle.dump(clf, open("clf_gbm.pkl", "wb"))
+            clf2 = pickle.load(open("clf_gbm.pkl", "rb"))
+            assert np.allclose(clf.predict(X), clf2.predict(X))
 
     def test_multiclass(self):
 
@@ -84,59 +157,6 @@ class TestGBMClassifier(object):
         clf.fit(Xmulti, Ymulti.argmax(-1), test_data=[(Xmulti, Ymulti.argmax(-1))])
         score = metrics.accuracy_score(Ymulti.argmax(-1), clf.predict(Xmulti))
         assert score > 0.8
-
-
-class TestGBMRegressor(object):
-    def test_simple_fit(self):
-        clf = GBMRegressor(exec_path=path_to_exec, num_iterations=1000,
-                           min_data_in_leaf=5, learning_rate=0.1, num_leaves=10, verbose=False)
-        clf.fit(Xreg, Yreg)
-        score = metrics.mean_squared_error(Yreg, clf.predict(Xreg))
-        assert score < 1.
-
-    def test_early_stopping(self):
-        num_iterations = 10000
-        x_train, x_test, y_train, y_test = model_selection.train_test_split(X, Y, test_size=test_size,
-                                                                            random_state=seed)
-        clf = GBMRegressor(exec_path=path_to_exec, num_iterations=num_iterations,
-                           min_data_in_leaf=3, learning_rate=0.01, num_leaves=5, early_stopping_round=2)
-        clf.fit(x_train, y_train, test_data=[(x_test, y_test)])
-        score = metrics.mean_squared_error(y_test, clf.predict(x_test))
-        print(score)
-        assert (score < 1. and clf.best_round < num_iterations)
-
-    def test_grid_search(self):
-        gbm = GBMRegressor(exec_path=path_to_exec, num_iterations=200, learning_rate=0.01,
-                           min_data_in_leaf=2, num_leaves=5, bagging_freq=2,
-                           metric='l2', verbose=False)
-
-        param_grid = {
-            'learning_rate': [0.01, 0.1, 1, 2],
-            'num_leaves': [2, 5, 50],
-            'min_data_in_leaf': [1, 10, 100],
-            'bagging_fraction': [0.1, 0.5]
-        }
-        scorer = metrics.make_scorer(metrics.mean_squared_error, greater_is_better=False)
-        clf = model_selection.GridSearchCV(gbm, param_grid, scoring=scorer, cv=2, refit=True)
-        clf.fit(Xreg, Yreg)
-        score = metrics.mean_squared_error(Yreg, clf.predict(Xreg))
-        print(score)
-        assert score < 2000
-
-    def test_sparse(self):
-        clf = GBMRegressor(exec_path=path_to_exec, num_iterations=1000,
-                           min_data_in_leaf=5, learning_rate=0.1, num_leaves=10, verbose=False)
-        clf.fit(sps.csr_matrix(Xreg), Yreg)
-        score = metrics.mean_squared_error(Yreg, clf.predict(sps.csr_matrix(Xreg)))
-        assert score < 1.
-
-    def test_pickle(self):
-        clf = GBMRegressor(exec_path=path_to_exec, verbose=False)
-        clf.fit(Xreg, Yreg)
-        pickle.dump(clf, open("clf_gbm.pkl", "wb"))
-        clf2 = pickle.load(open("clf_gbm.pkl", "rb"))
-        assert np.allclose(clf.predict(Xreg), clf2.predict(Xreg))
-
 
 if __name__ == '__main__':
     pytest.main([__file__])
