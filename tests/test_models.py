@@ -37,7 +37,7 @@ class TestGBM(object):
         ]
 
         for x, y, name, clf in clfs:
-            clf.fit(x, y)
+            clf.fit(x, y, init_scores=np.zeros(x.shape[0]))
 
             if name == 'regression':
                 score = metrics.mean_squared_error(y, clf.predict(x))
