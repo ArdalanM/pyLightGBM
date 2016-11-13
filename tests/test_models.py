@@ -28,7 +28,7 @@ class TestGBM(object):
     def test_simple_fit(self):
 
         params = dict(exec_path=path_to_exec, num_iterations=100, min_data_in_leaf=1,
-                      learning_rate=0.1, num_leaves=5)
+                      learning_rate=0.1, num_leaves=5, max_depth=10)
         clfs = [
             [Xreg, Yreg, 'regression', GBMRegressor(boosting_type='gbdt', **params)],
             [Xreg, Yreg, 'regression', GBMRegressor(boosting_type='dart', **params)],

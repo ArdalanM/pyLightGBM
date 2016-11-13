@@ -41,6 +41,10 @@ class GenericGMB(BaseEstimator):
                  min_sum_hessian_in_leaf=10,
                  drop_rate=0.01,
                  drop_seed=4,
+                 max_depth=-1,
+                 lambda_l1=0.,
+                 lambda_l2=0.,
+                 min_gain_to_split=0.,
                  verbose=True,
                  model=None):
 
@@ -78,7 +82,11 @@ class GenericGMB(BaseEstimator):
             'boosting_type': boosting_type,
             'min_sum_hessian_in_leaf': min_sum_hessian_in_leaf,
             'drop_rate': drop_rate,
-            'drop_seed': drop_seed
+            'drop_seed': drop_seed,
+            'max_depth': max_depth,
+            'lambda_l1': lambda_l1,
+            'lambda_l2': lambda_l2,
+            'min_gain_to_split': min_gain_to_split,
         }
 
     def fit(self, X, y, test_data=None, init_scores=[]):
@@ -246,6 +254,10 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                  min_sum_hessian_in_leaf=10,
                  drop_rate=0.01,
                  drop_seed=4,
+                 max_depth=-1,
+                 lambda_l1=0.,
+                 lambda_l2=0.,
+                 min_gain_to_split=0.,
                  verbose=True,
                  model=None):
         super(GBMClassifier, self).__init__(exec_path=exec_path,
@@ -273,6 +285,10 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
                                             min_sum_hessian_in_leaf=min_sum_hessian_in_leaf,
                                             drop_rate=drop_rate,
                                             drop_seed=drop_seed,
+                                            max_depth=max_depth,
+                                            lambda_l1=lambda_l1,
+                                            lambda_l2=lambda_l2,
+                                            min_gain_to_split=min_gain_to_split,
                                             verbose=verbose,
                                             model=model)
 
@@ -356,6 +372,10 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                  min_sum_hessian_in_leaf=10,
                  drop_rate=0.01,
                  drop_seed=4,
+                 max_depth=-1,
+                 lambda_l1=0.,
+                 lambda_l2=0.,
+                 min_gain_to_split=0.,
                  verbose=True,
                  model=None):
         super(GBMRegressor, self).__init__(exec_path=exec_path,
@@ -383,5 +403,9 @@ class GBMRegressor(GenericGMB, RegressorMixin):
                                            min_sum_hessian_in_leaf=min_sum_hessian_in_leaf,
                                            drop_rate=drop_rate,
                                            drop_seed=drop_seed,
+                                           max_depth=max_depth,
+                                           lambda_l1=lambda_l1,
+                                           lambda_l2=lambda_l2,
+                                           min_gain_to_split=min_gain_to_split,
                                            verbose=verbose,
                                            model=model)
