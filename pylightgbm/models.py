@@ -81,14 +81,23 @@ class GenericGMB(BaseEstimator):
             'drop_seed': drop_seed
         }
 
-    def fit(self, X, y, test_data=None):
+    def fit(self, X, y, test_data=None, init_scores=[]):
         # create tmp dir to hold data and model (especially the latter)
         tmp_dir = tempfile.mkdtemp()
         issparse = sps.issparse(X)
         f_format = "svm" if issparse else "csv"
 
         train_filepath = os.path.abspath("{}/X.{}".format(tmp_dir, f_format))
+        init_filepath = train_filepath + ".init"
         io_utils.dump_data(X, y, train_filepath, issparse)
+
+        if len(init_scores) > 0:
+            assert len(init_scores) == X.shape[0]
+            np.savetxt(init_filepath, X=init_scores, delimiter=',', newline=os.linesep)
+        # else:
+        #     if self.param['application'] in ['binary', 'multiclass']:
+        #         np.savetxt(init_filepath, X=0.5 * np.ones(X.shape[0]),
+        #                    delimiter=',', newline=os.linesep)
 
         if test_data:
             valid = []
@@ -124,7 +133,7 @@ class GenericGMB(BaseEstimator):
 
         with open(self.param['output_model'], mode='r') as file:
             self.model = file.read()
-        shutil.rmtree(tmp_dir)
+        # shutil.rmtree(tmp_dir)
 
         if test_data and self.param['early_stopping_round'] > 0:
             self.best_round = max(map(int, re.findall("Tree=(\d+)", self.model))) + 1
@@ -162,7 +171,7 @@ class GenericGMB(BaseEstimator):
         process.wait()
 
         y_pred = np.loadtxt(output_results, dtype=float)
-        shutil.rmtree(tmp_dir)
+        # shutil.rmtree(tmp_dir)
 
         return y_pred
 
@@ -313,7 +322,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         else:
             raise
 
-        shutil.rmtree(tmp_dir)
+        # shutil.rmtree(tmp_dir)
         return y_prob
 
     def predict(self, X):
