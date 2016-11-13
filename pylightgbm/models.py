@@ -133,7 +133,7 @@ class GenericGMB(BaseEstimator):
 
         with open(self.param['output_model'], mode='r') as file:
             self.model = file.read()
-        # shutil.rmtree(tmp_dir)
+        shutil.rmtree(tmp_dir)
 
         if test_data and self.param['early_stopping_round'] > 0:
             self.best_round = max(map(int, re.findall("Tree=(\d+)", self.model))) + 1
@@ -171,7 +171,7 @@ class GenericGMB(BaseEstimator):
         process.wait()
 
         y_pred = np.loadtxt(output_results, dtype=float)
-        # shutil.rmtree(tmp_dir)
+        shutil.rmtree(tmp_dir)
 
         return y_pred
 
@@ -322,7 +322,7 @@ class GBMClassifier(GenericGMB, ClassifierMixin):
         else:
             raise
 
-        # shutil.rmtree(tmp_dir)
+        shutil.rmtree(tmp_dir)
         return y_prob
 
     def predict(self, X):
