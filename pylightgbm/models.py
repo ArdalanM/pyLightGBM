@@ -3,6 +3,7 @@
 @author: Ardalan MEHRANI <ardalan77400@gmail.com>
 @brief:
 """
+from __future__ import print_function
 import os
 import re
 import sys
